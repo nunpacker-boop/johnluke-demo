@@ -1,0 +1,76 @@
+/* =========================
+   Header / Nav cleanup
+   ========================= */
+
+.header-links,
+.header-links li,
+.header-dropdown-list,
+.header-dropdown-list li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.header-links {
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-links > li {
+  padding: 12px 20px;
+}
+
+/* Dropdown container must be relative so submenu positions correctly */
+.header-dropdown {
+  position: relative;
+}
+
+/* Works label should behave like other nav items */
+.header-dropdown-btn {
+  display: inline-block;
+  cursor: default;
+  user-select: none;
+}
+
+/* Dropdown menu – hidden by default */
+.header-dropdown-list {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+
+  min-width: 240px;
+  padding: 10px 0;
+
+  background: var(--footer-bg);
+  color: var(--white);
+
+  border-radius: 0.3rem;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  z-index: 9999999;
+
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+/* Show on hover or keyboard focus */
+.header-dropdown:hover .header-dropdown-list,
+.header-dropdown:focus-within .header-dropdown-list {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.header-dropdown-list a {
+  display: block;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.header-dropdown-list a:hover,
+.header-dropdown-list a:focus {
+  background: var(--shadow);
+}
