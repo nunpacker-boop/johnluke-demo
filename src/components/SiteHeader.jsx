@@ -15,7 +15,7 @@ export default function SiteHeader() {
             <span style={{ opacity: 0.9 }}>Foundation website demo</span>
           </div>
           <div className="page-bar-link-iconic">
-            <a href="mailto:info@johnlukefoundation.org">info@johnlukefoundation.org</a>
+            <a href="mailto:info@johnluke.art">info@johnluke.art</a>
           </div>
         </div>
       </div>
