@@ -74,3 +74,181 @@
 .header-dropdown-list a:focus {
   background: var(--shadow);
 }
+
+/* =========================
+   Mobile nav — hamburger + drawer
+   ========================= */
+
+/* Hide desktop nav on mobile */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .page-bar-demo-label {
+    display: none;
+  }
+}
+
+/* Hide hamburger on desktop */
+.hamburger {
+  display: none;
+}
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin: -8px;
+    color: inherit;
+    z-index: 10000001;
+    position: relative;
+  }
+}
+
+/* Three-bar icon */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 16px;
+}
+.hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  transform-origin: center;
+}
+
+/* Animate to X when open */
+.hamburger-icon.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger-icon.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Drawer — slides down from header */
+.mobile-nav {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--header);
+  color: var(--header-color);
+  z-index: 10000000;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mobile-nav--open {
+  max-height: 100vh;
+}
+
+/* Only show drawer on mobile */
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none;
+  }
+}
+
+/* Make header position:relative so drawer anchors to it */
+@media (max-width: 768px) {
+  header {
+    position: relative;
+    height: auto !important;
+    min-height: var(--hh);
+  }
+}
+
+/* Drawer list */
+.mobile-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 24px;
+}
+.mobile-nav-list > li > a,
+.mobile-nav-list > li > span {
+  display: block;
+  padding: 14px var(--cp);
+  text-decoration: none;
+  color: inherit;
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.mobile-nav-list > li > a:hover,
+.mobile-nav-list > li > a:focus {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Works group label */
+.mobile-nav-group-label {
+  display: block;
+  padding: 14px var(--cp) 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  border-bottom: none !important;
+}
+
+/* Works sub-links */
+.mobile-nav-sub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mobile-nav-sub li a {
+  display: block;
+  padding: 12px var(--cp);
+  padding-left: calc(var(--cp) + 16px);
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.mobile-nav-sub li a:hover {
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 1;
+}
+
+/* Contact CTA at bottom of drawer */
+.mobile-nav-cta {
+  padding: 16px var(--cp) 0;
+  border-bottom: none !important;
+}
+.mobile-nav-cta a {
+  display: inline-block;
+  padding: 0.65rem 1.4rem;
+  background: var(--primary);
+  color: white !important;
+  border-radius: 0.3rem;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+/* Page bar — hide demo label on mobile (already handled above),
+   stack to single column on very small screens */
+@media (max-width: 480px) {
+  .page-bar > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .page-bar-link-iconic {
+    justify-content: start;
+  }
+}
