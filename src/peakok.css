@@ -136,6 +136,14 @@ section > article{
 .cta-primary.dull:hover,.cta-primary.dull:focus{
   background:var(--primary) !important;border:1px solid var(--primary);color:#ffffff !important;
 }
+.cta-primary.inverted{
+  color:var(--shadow) !important;
+  background:var(--white);
+  border:1px solid var(--white);
+}
+.cta-primary.inverted:hover,.cta-primary.inverted:focus{
+  background:var(--secondary) !important;border:1px solid var(--secondary);color:var(--shadow) !important;
+}
 .btn-duo{display:inline-flex;flex-wrap:wrap;gap:21px;width:100%;align-items:center;}
 
 /* ===== Page bar ===== */

@@ -18,8 +18,8 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
 
-          <Route path="selected-catalogue" element={<SelectedCatalogue />} />
-          <Route path="living-catalogue" element={<LivingCatalogue />} />
+          <Route path="/selected-catalogue" element={<SelectedCatalogue />} />
+          <Route path="/living-catalogue" element={<LivingCatalogue />} />
 
           <Route path="/trustee-prospectus" element={<TrusteeProspectus />} />
           <Route path="/archive" element={<Archive />} />

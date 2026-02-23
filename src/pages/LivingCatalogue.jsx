@@ -10,27 +10,9 @@ export default function LivingCatalogue() {
             <div className="preheading">Works</div>
             <h1>Living Catalogue Raisonné</h1>
             <p>
-             Purpose of the Living Catalogue: A continuously evolving catalogue documenting every known, lost, rediscovered, attributed, or uncertain work by John Luke.
-Because many artworks are dispersed across private collections, undocumented, or only known from exhibition catalogues, letters, or poor-quality photographs, a traditional “final” catalogue raisonné is not feasible. The Living Catalogue reflects the Foundation’s commitment to an evidence-based but non-final form — a catalogue that grows as new information emerges.
-
-Why this catalogue is needed: 
-
-Research on Luke is fragmented, often hidden in private archives, dispersed exhibition histories, family letters, and scattered photographic sources. No single body has ever coordinated or preserved:
-
-high-resolution images of artworks
-
-archival letters and photographs
-
-technical notes
-
-genealogical and historical context
-
-digitised archives
-
-public heritage assets
-
-educational material
-
+              A continuously evolving catalogue documenting every known, lost, rediscovered,
+              attributed, or uncertain work by John Luke — evidence-based, non-final, and
+              open to new discoveries as they emerge.
             </p>
 
             <div className="btn-duo">
@@ -43,7 +25,6 @@ educational material
             </div>
           </div>
 
-          {/* Replace with a relevant archive/work image when you have one */}
           <div
             className="panel-media"
             style={{
@@ -62,8 +43,44 @@ educational material
                 A catalogue that can grow forever
               </div>
               <p style={{ opacity: 0.9 }}>
-                Like a long-term civic work—built carefully, expanded responsibly, never rushed.
+                Like a long-term civic work — built carefully, expanded responsibly, never rushed.
               </p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      {/* Why this catalogue is needed */}
+      <section className="panel">
+        <article>
+          <div className="panel-content">
+            <div className="preheading">Context</div>
+            <h2 className="H2">Why this catalogue is needed</h2>
+            <p>
+              Research on Luke is fragmented — dispersed across private archives, scattered
+              exhibition histories, family letters, and poor-quality photographs. No single body has
+              ever coordinated a complete picture of his output.
+            </p>
+            <p>
+              The Foundation exists to change that: bringing together high-resolution imagery,
+              archival letters, technical notes, digitised documents, and educational material into
+              one structured, accessible resource.
+            </p>
+          </div>
+
+          <div className="panel-media" style={{ background: "white" }}>
+            <div style={{ padding: 24 }}>
+              <h3 className="H3" style={{ color: "var(--shadow)" }}>
+                What has never been coordinated
+              </h3>
+              <ul style={{ marginTop: 12, color: "var(--shadow)" }}>
+                <li>High-resolution images of artworks</li>
+                <li>Archival letters and photographs</li>
+                <li>Technical notes on materials and method</li>
+                <li>Genealogical and historical context</li>
+                <li>Digitised archives and public heritage assets</li>
+                <li>Educational material</li>
+              </ul>
             </div>
           </div>
         </article>
@@ -74,7 +91,7 @@ educational material
         <article>
           <div className="panel-content">
             <div className="preheading">Definition</div>
-            <h2 className="H2">What “living” means</h2>
+            <h2 className="H2">What "living" means</h2>
             <p>
               A traditional catalogue raisonné aims to be complete and final. For John Luke, that
               ideal is difficult: works are scattered, privately held, sometimes undocumented, and
@@ -111,8 +128,8 @@ educational material
             <div className="preheading">Method</div>
             <h2 className="H2">How the catalogue is built</h2>
             <p>
-              Entries are created from primary evidence (photographs, letters, exhibition catalogues,
-              sales records, studio notes) and then refined as new sources appear.
+              Entries are created from primary evidence — photographs, letters, exhibition catalogues,
+              sales records, studio notes — and then refined as new sources appear.
             </p>
             <ul>
               <li>
@@ -174,7 +191,7 @@ educational material
                 A careful approach
               </h3>
               <p style={{ color: "var(--shadow)", marginTop: 10 }}>
-                The catalogue grows through trust, evidence, and patience—never pressure.
+                The catalogue grows through trust, evidence, and patience — never pressure.
               </p>
             </div>
           </div>
