@@ -35,94 +35,25 @@ export default function SiteHeader() {
   }, [menuOpen]);
 
   return (
-    <>
-      {/* ── Top bar ──────────────────────────────────────────── */}
-      <div className="page-bar">
-        <div>
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <span style={{ fontWeight: 600 }}>John Luke Foundation</span>
-            <span style={{ opacity: 0.9 }} className="page-bar-demo-label">
-              Foundation website demo
+    <header ref={menuRef}>
+      <div>
+        <nav>
+          {/* Logo / wordmark */}
+          <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+            <span className="H3" style={{ fontSize: "1.3rem" }}>
+              John Luke Foundation
             </span>
-          </div>
-          <div className="page-bar-link-iconic">
-            <a href="mailto:info@johnluke.art">info@johnluke.art</a>
-          </div>
-        </div>
-      </div>
+          </Link>
 
-      {/* ── Main header ──────────────────────────────────────── */}
-      <header ref={menuRef}>
-        <div>
-          <nav>
-            {/* Logo / wordmark */}
-            <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-              <span className="H3" style={{ fontSize: "1.3rem" }}>
-                John Luke Foundation
-              </span>
-            </Link>
-
-            {/* ── Desktop nav ────────────────────────────────── */}
-            <ul className="header-links desktop-nav">
-              <li>
-                <NavLink to="/about" style={navItem}>Foundation</NavLink>
-              </li>
-
-              <li className="header-dropdown">
-                <span className="header-dropdown-btn">Works</span>
-                <ul className="header-dropdown-list">
-                  <li>
-                    <NavLink to="/selected-catalogue" style={navItem}>
-                      Selected Catalogue
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink to="/living-catalogue" style={navItem}>
-                      Living Catalogue Raisonné
-                    </NavLink>
-                  </li>
-                </ul>
-              </li>
-
-              <li>
-                <NavLink to="/archive" style={navItem}>Archive</NavLink>
-              </li>
-              <li>
-                <NavLink to="/exhibitions" style={navItem}>Exhibitions</NavLink>
-              </li>
-              <li>
-                <NavLink to="/trustee-prospectus" style={navItem}>Trustees</NavLink>
-              </li>
-              <li>
-                <NavLink className="cta-primary dull" to="/contact">Contact</NavLink>
-              </li>
-            </ul>
-
-            {/* ── Hamburger button (mobile only) ─────────────── */}
-            <button
-              className="hamburger"
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              <span className={`hamburger-icon ${menuOpen ? "open" : ""}`}>
-                <span /><span /><span />
-              </span>
-            </button>
-          </nav>
-        </div>
-
-        {/* ── Mobile drawer ──────────────────────────────────── */}
-        <div className={`mobile-nav ${menuOpen ? "mobile-nav--open" : ""}`} aria-hidden={!menuOpen}>
-          <ul className="mobile-nav-list">
+          {/* ── Desktop nav ──────────────────────────────────── */}
+          <ul className="header-links desktop-nav">
             <li>
               <NavLink to="/about" style={navItem}>Foundation</NavLink>
             </li>
 
-            {/* Works — expanded inline on mobile */}
-            <li className="mobile-nav-group">
-              <span className="mobile-nav-group-label">Works</span>
-              <ul className="mobile-nav-sub">
+            <li className="header-dropdown">
+              <span className="header-dropdown-btn">Works</span>
+              <ul className="header-dropdown-list">
                 <li>
                   <NavLink to="/selected-catalogue" style={navItem}>
                     Selected Catalogue
@@ -145,12 +76,62 @@ export default function SiteHeader() {
             <li>
               <NavLink to="/trustee-prospectus" style={navItem}>Trustees</NavLink>
             </li>
-            <li className="mobile-nav-cta">
-              <NavLink to="/contact">Contact</NavLink>
+            <li>
+              <NavLink className="cta-primary dull" to="/contact">Contact</NavLink>
             </li>
           </ul>
-        </div>
-      </header>
-    </>
+
+          {/* ── Hamburger button (mobile only) ───────────────── */}
+          <button
+            className="hamburger"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span className={`hamburger-icon ${menuOpen ? "open" : ""}`}>
+              <span /><span /><span />
+            </span>
+          </button>
+        </nav>
+      </div>
+
+      {/* ── Mobile drawer ────────────────────────────────────── */}
+      <div className={`mobile-nav ${menuOpen ? "mobile-nav--open" : ""}`} aria-hidden={!menuOpen}>
+        <ul className="mobile-nav-list">
+          <li>
+            <NavLink to="/about" style={navItem}>Foundation</NavLink>
+          </li>
+
+          <li className="mobile-nav-group">
+            <span className="mobile-nav-group-label">Works</span>
+            <ul className="mobile-nav-sub">
+              <li>
+                <NavLink to="/selected-catalogue" style={navItem}>
+                  Selected Catalogue
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/living-catalogue" style={navItem}>
+                  Living Catalogue Raisonné
+                </NavLink>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <NavLink to="/archive" style={navItem}>Archive</NavLink>
+          </li>
+          <li>
+            <NavLink to="/exhibitions" style={navItem}>Exhibitions</NavLink>
+          </li>
+          <li>
+            <NavLink to="/trustee-prospectus" style={navItem}>Trustees</NavLink>
+          </li>
+          <li className="mobile-nav-cta">
+            <NavLink to="/contact">Contact</NavLink>
+          </li>
+        </ul>
+      </div>
+    </header>
   );
 }

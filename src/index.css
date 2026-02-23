@@ -84,9 +84,6 @@
   .desktop-nav {
     display: none !important;
   }
-  .page-bar-demo-label {
-    display: none;
-  }
 }
 
 /* Hide hamburger on desktop */
@@ -241,14 +238,4 @@
   font-size: 1rem;
 }
 
-/* Page bar — hide demo label on mobile (already handled above),
-   stack to single column on very small screens */
-@media (max-width: 480px) {
-  .page-bar > div {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-  .page-bar-link-iconic {
-    justify-content: start;
-  }
-}
+
