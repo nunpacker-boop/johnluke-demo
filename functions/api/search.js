@@ -132,11 +132,22 @@ export async function onRequestGet({ request, env }) {
     `;
   }
 
-  // ── Call Neo4j Aura Query API ────────────────────────────────────────────
-  const neo4jHost = env.NEO4J_URI.replace(/^neo4j\+s:\/\//, "https://");
+  // ── Build Neo4j endpoint ─────────────────────────────────────────────────
+  // Accept either neo4j+s://xxx.databases.neo4j.io  or  https://xxx.databases.neo4j.io
+  const neo4jHost = env.NEO4J_URI
+    .replace(/^neo4j\+s:\/\//, "https://")
+    .replace(/^neo4j:\/\//, "http://")
+    .replace(/\/$/, ""); // strip trailing slash
   const endpoint = `${neo4jHost}/db/neo4j/query/v2`;
-
   const credentials = btoa(`${env.NEO4J_USER}:${env.NEO4J_PASSWORD}`);
+
+  // ── Validate env vars are present ───────────────────────────────────────
+  if (!env.NEO4J_URI || !env.NEO4J_USER || !env.NEO4J_PASSWORD) {
+    return new Response(
+      JSON.stringify({ error: "Database not configured. Set NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD in Cloudflare Pages environment variables." }),
+      { status: 503, headers: corsHeaders }
+    );
+  }
 
   let neo4jResponse;
   try {
@@ -147,11 +158,12 @@ export async function onRequestGet({ request, env }) {
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
-      body: JSON.stringify({ cypher, parameters: params }),
+      // NOTE: Neo4j Query API uses "statement", not "cypher"
+      body: JSON.stringify({ statement: cypher, parameters: params }),
     });
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: "Database connection failed", details: err.message }),
+      JSON.stringify({ error: `Database connection failed: ${err.message}. Check NEO4J_URI is correct (should start with https://, not neo4j+s://).` }),
       { status: 502, headers: corsHeaders }
     );
   }
@@ -159,8 +171,8 @@ export async function onRequestGet({ request, env }) {
   if (!neo4jResponse.ok) {
     const errorText = await neo4jResponse.text();
     return new Response(
-      JSON.stringify({ error: "Database query failed", details: errorText }),
-      { status: neo4jResponse.status, headers: corsHeaders }
+      JSON.stringify({ error: `Neo4j returned ${neo4jResponse.status}`, details: errorText }),
+      { status: 200, headers: corsHeaders } // return 200 so browser parses JSON not HTML
     );
   }
 
