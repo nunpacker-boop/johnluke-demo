@@ -3,17 +3,16 @@
  *
  * Schema:
  *   (:Artwork) props: title, medium, dateText, yearFrom, yearTo,
- *                     currentLocation, dimensionsText, legacyRef, notes, slug
+ *                     currentLocation, dimensionsText, legacyRef, slug,
+ *                     artworkId, imageUrl, thumbnailUrl
  *   (:Artwork)-[:USES_TECHNIQUE]->(:Technique { name })
  *   (:Artwork)-[:CREATED_IN]->(:Period { name })
- *   (:Artwork)-[:HOUSED_AT]->(:Institution)
  *   (:Exhibition)-[:INCLUDES_ARTWORK]->(:Artwork)
- *   (:Exhibition) props: title, yearText, exhibitionType
  */
 
 export async function onRequestGet({ request, env }) {
   const cors = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin":  "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Content-Type": "application/json",
@@ -41,18 +40,43 @@ export async function onRequestGet({ request, env }) {
 
   const sq = q.toLowerCase();
   const params = { limit };
-  let cypher = "";
 
-  // Date filter fragment — appended as AND clause
+  // Date filter fragment
   const dateParts = [];
   if (dateFrom) { dateParts.push("w.yearFrom >= $dateFrom"); params.dateFrom = dateFrom; }
   if (dateTo)   { dateParts.push("w.yearTo   <= $dateTo");   params.dateTo   = dateTo; }
   const dateAnd = dateParts.length ? " AND " + dateParts.join(" AND ") : "";
 
+  // ── Common RETURN block ───────────────────────────────────────────────────
+  // Collects ALL techniques and ALL exhibitions per artwork — no duplicates.
+  // yearFrom/yearTo cast to integer to strip the .0 float suffix.
+  const RETURN_BLOCK = `
+    WITH w,
+      collect(DISTINCT t.name) AS techniques,
+      collect(DISTINCT p.name) AS periods,
+      collect(DISTINCT ex.title)[0..3] AS exhibitions
+    RETURN
+      w.title           AS title,
+      w.dateText        AS dateText,
+      toInteger(w.yearFrom) AS yearFrom,
+      toInteger(w.yearTo)   AS yearTo,
+      w.medium          AS medium,
+      w.legacyRef       AS legacyRef,
+      w.artworkId       AS artworkId,
+      w.currentLocation AS location,
+      w.dimensionsText  AS dimensions,
+      w.slug            AS slug,
+      w.imageUrl        AS imageUrl,
+      w.thumbnailUrl    AS thumbnailUrl,
+      techniques,
+      periods,
+      exhibitions
+    ORDER BY w.yearFrom ASC, w.title ASC
+    LIMIT $limit
+  `;
+
   // ── Query shapes ──────────────────────────────────────────────────────────
-  // Key principle: filter BEFORE optional matches so WHERE works cleanly.
-  // We use subqueries / UNION patterns to avoid null-contamination from
-  // OPTIONAL MATCH interfering with WHERE clauses.
+  let cypher = "";
 
   if (type === "title") {
     params.q = sq;
@@ -62,129 +86,92 @@ export async function onRequestGet({ request, env }) {
       OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
       OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-      RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-        w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-        t.name AS technique, p.name AS period,
-        collect(DISTINCT ex.title)[0..3] AS exhibitions
-      ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
+      ${RETURN_BLOCK}
     `;
 
   } else if (type === "medium") {
     params.q = sq;
-    // Two separate matches — direct medium prop, and via Technique node — then UNION
+    // Match on medium property OR technique node — then collect all
     cypher = `
       MATCH (w:Artwork)
       WHERE toLower(w.medium) CONTAINS $q ${dateAnd}
       OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
       OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-      RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-        w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-        t.name AS technique, p.name AS period,
-        collect(DISTINCT ex.title)[0..3] AS exhibitions
-      UNION
-      MATCH (w:Artwork)-[:USES_TECHNIQUE]->(t:Technique)
-      WHERE toLower(t.name) CONTAINS $q ${dateAnd}
+      ${RETURN_BLOCK}
+      UNION ALL
+      MATCH (w:Artwork)-[:USES_TECHNIQUE]->(tMatch:Technique)
+      WHERE toLower(tMatch.name) CONTAINS $q ${dateAnd}
+        AND NOT toLower(w.medium) CONTAINS $q
+      OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
       OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-      RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-        w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-        t.name AS technique, p.name AS period,
-        collect(DISTINCT ex.title)[0..3] AS exhibitions
+      ${RETURN_BLOCK}
     `;
-    // Note: UNION doesn't support top-level ORDER BY/LIMIT in all Neo4j versions
-    // so we wrap it — but Aura supports it directly, limit applied per branch
 
   } else if (type === "period") {
     params.q = sq;
     cypher = `
-      MATCH (w:Artwork)-[:CREATED_IN]->(p:Period)
-      WHERE toLower(p.name) CONTAINS $q ${dateAnd}
+      MATCH (w:Artwork)-[:CREATED_IN]->(pMatch:Period)
+      WHERE toLower(pMatch.name) CONTAINS $q ${dateAnd}
       OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
+      OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-      RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-        w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-        t.name AS technique, p.name AS period,
-        collect(DISTINCT ex.title)[0..3] AS exhibitions
-      ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
+      ${RETURN_BLOCK}
     `;
 
   } else if (type === "exhibition") {
     params.q = sq;
     cypher = `
-      MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w:Artwork)
-      WHERE toLower(ex.title) CONTAINS $q
-         OR toLower(ex.exhibitionType) CONTAINS $q
-         OR toLower(ex.yearText) CONTAINS $q
+      MATCH (exMatch:Exhibition)-[:INCLUDES_ARTWORK]->(w:Artwork)
+      WHERE toLower(exMatch.title) CONTAINS $q
+         OR toLower(exMatch.exhibitionType) CONTAINS $q
+         OR toLower(exMatch.yearText) CONTAINS $q
       OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
       OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
-      WITH w, t, p, collect(DISTINCT ex.title)[0..3] AS exhibitions
-      RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-        w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-        t.name AS technique, p.name AS period, exhibitions
-      ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
+      OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
+      ${RETURN_BLOCK}
+    `;
+
+  } else if (!q) {
+    // Date-only search
+    cypher = `
+      MATCH (w:Artwork)
+      WHERE ${dateParts.join(" AND ")}
+      OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
+      OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
+      OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
+      ${RETURN_BLOCK}
     `;
 
   } else {
-    // "all" — search across title, medium, technique name, period name
-    // Use UNION of targeted matches so WHERE always fires on real values (no nulls)
+    // "all" — search across title, medium, technique, period, exhibition
     params.q = sq;
-
-    // If date-only (no text query), use simple match
-    if (!q) {
-      cypher = `
-        MATCH (w:Artwork)
-        WHERE ${dateParts.join(" AND ")}
-        OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
-        OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
-        OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-        RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-          w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-          t.name AS technique, p.name AS period,
-          collect(DISTINCT ex.title)[0..3] AS exhibitions
-        ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
-      `;
-    } else {
-      // Title / medium match
-      cypher = `
-        MATCH (w:Artwork)
-        WHERE (toLower(w.title) CONTAINS $q OR toLower(w.medium) CONTAINS $q) ${dateAnd}
-        OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
-        OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
-        OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-        RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-          w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-          t.name AS technique, p.name AS period,
-          collect(DISTINCT ex.title)[0..3] AS exhibitions
-        UNION
-        MATCH (w:Artwork)-[:USES_TECHNIQUE]->(t:Technique)
-        WHERE toLower(t.name) CONTAINS $q ${dateAnd}
-        OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
-        OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-        RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-          w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-          t.name AS technique, p.name AS period,
-          collect(DISTINCT ex.title)[0..3] AS exhibitions
-        UNION
-        MATCH (w:Artwork)-[:CREATED_IN]->(p:Period)
-        WHERE toLower(p.name) CONTAINS $q ${dateAnd}
-        OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
-        OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
-        RETURN DISTINCT w.title AS title, w.dateText AS dateText,
-          w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
-          t.name AS technique, p.name AS period,
-          collect(DISTINCT ex.title)[0..3] AS exhibitions
-      `;
-    }
+    cypher = `
+      MATCH (w:Artwork)
+      WHERE (toLower(w.title) CONTAINS $q OR toLower(w.medium) CONTAINS $q) ${dateAnd}
+      OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
+      OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
+      OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
+      ${RETURN_BLOCK}
+      UNION
+      MATCH (w:Artwork)-[:USES_TECHNIQUE]->(tMatch:Technique)
+      WHERE toLower(tMatch.name) CONTAINS $q ${dateAnd}
+        AND NOT (toLower(w.title) CONTAINS $q OR toLower(w.medium) CONTAINS $q)
+      OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
+      OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
+      OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
+      ${RETURN_BLOCK}
+      UNION
+      MATCH (w:Artwork)-[:CREATED_IN]->(pMatch:Period)
+      WHERE toLower(pMatch.name) CONTAINS $q ${dateAnd}
+        AND NOT (toLower(w.title) CONTAINS $q OR toLower(w.medium) CONTAINS $q)
+        AND NOT exists { (w)-[:USES_TECHNIQUE]->(tEx:Technique) WHERE toLower(tEx.name) CONTAINS $q }
+      OPTIONAL MATCH (w)-[:USES_TECHNIQUE]->(t:Technique)
+      OPTIONAL MATCH (w)-[:CREATED_IN]->(p:Period)
+      OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
+      ${RETURN_BLOCK}
+    `;
   }
 
   // ── Connect & query ───────────────────────────────────────────────────────
@@ -201,7 +188,7 @@ export async function onRequestGet({ request, env }) {
       method: "POST",
       headers: {
         "Authorization": `Basic ${credentials}`,
-        "Content-Type": "application/json",
+        "Content-Type":  "application/json",
         "Accept":        "application/json",
       },
       body: JSON.stringify({ statement: cypher, parameters: params }),
@@ -231,11 +218,23 @@ export async function onRequestGet({ request, env }) {
 
   const fields  = data?.data?.fields || [];
   const rows    = data?.data?.values || [];
-  const results = rows.map(row => {
+
+  // Deduplicate by artworkId (safety net in case UNION still produces dupes)
+  const seen    = new Set();
+  const results = [];
+  for (const row of rows) {
     const obj = {};
     fields.forEach((f, i) => { obj[f] = row[i]; });
-    return obj;
-  });
+    const key = obj.artworkId || obj.title;
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+
+    // Flatten collected arrays to single values for card display
+    obj.technique = Array.isArray(obj.techniques) ? obj.techniques.filter(Boolean).join(", ") : (obj.technique || "");
+    obj.period    = Array.isArray(obj.periods)    ? obj.periods.filter(Boolean)[0]            : (obj.period    || "");
+
+    results.push(obj);
+  }
 
   return new Response(
     JSON.stringify({ query: q, type, count: results.length, results }),
