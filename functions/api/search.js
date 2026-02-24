@@ -233,6 +233,11 @@ export async function onRequestGet({ request, env }) {
     obj.technique = Array.isArray(obj.techniques) ? obj.techniques.filter(Boolean).join(", ") : (obj.technique || "");
     obj.period    = Array.isArray(obj.periods)    ? obj.periods.filter(Boolean)[0]            : (obj.period    || "");
 
+    // Strip .0 from years stored as float strings e.g. "1945.0" -> "1945"
+    if (obj.yearFrom != null) obj.yearFrom = parseInt(parseFloat(obj.yearFrom));
+    if (obj.yearTo   != null) obj.yearTo   = parseInt(parseFloat(obj.yearTo));
+    if (obj.dateText) obj.dateText = String(obj.dateText).replace(/\.0$/, "");
+
     results.push(obj);
   }
 

@@ -13,12 +13,17 @@ function ArtworkCard({ work }) {
     <div className="artwork-card">
       <div className="artwork-card-image">
         {imageUrl && !imgError ? (
-          <img
-            src={imageUrl}
-            alt={work.title || "Artwork"}
-            onError={() => setImgError(true)}
-            loading="lazy"
-          />
+          <div className="artwork-img-protect">
+            <img
+              src={imageUrl}
+              alt={work.title || "Artwork"}
+              onError={() => setImgError(true)}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              loading="lazy"
+            />
+            <div className="artwork-img-shield" />
+          </div>
         ) : (
           <div className="artwork-card-no-image">
             <span>{id || "◎"}</span>
@@ -358,9 +363,11 @@ export default function Browse() {
 
         /* Image area */
         .artwork-card-image { width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #f0ede8; display: flex; align-items: center; justify-content: center; }
-        .artwork-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-        .artwork-card:hover .artwork-card-image img { transform: scale(1.03); }
         .artwork-card-no-image { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #c8beb4; font-size: 0.75rem; font-family: monospace; letter-spacing: 0.05em; }
+        .artwork-img-protect { position: relative; width: 100%; height: 100%; }
+        .artwork-img-protect img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+        .artwork-card:hover .artwork-img-protect img { transform: scale(1.03); }
+        .artwork-img-shield { position: absolute; inset: 0; z-index: 2; cursor: default; }
 
         /* Text */
         .artwork-card-inner { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
