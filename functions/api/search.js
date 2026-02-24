@@ -64,7 +64,7 @@ export async function onRequestGet({ request, env }) {
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
       RETURN DISTINCT w.title AS title, w.dateText AS dateText,
         w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
         t.name AS technique, p.name AS period,
         collect(DISTINCT ex.title)[0..3] AS exhibitions
       ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
@@ -81,7 +81,7 @@ export async function onRequestGet({ request, env }) {
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
       RETURN DISTINCT w.title AS title, w.dateText AS dateText,
         w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
         t.name AS technique, p.name AS period,
         collect(DISTINCT ex.title)[0..3] AS exhibitions
       UNION
@@ -91,7 +91,7 @@ export async function onRequestGet({ request, env }) {
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
       RETURN DISTINCT w.title AS title, w.dateText AS dateText,
         w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
         t.name AS technique, p.name AS period,
         collect(DISTINCT ex.title)[0..3] AS exhibitions
     `;
@@ -107,7 +107,7 @@ export async function onRequestGet({ request, env }) {
       OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
       RETURN DISTINCT w.title AS title, w.dateText AS dateText,
         w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
         t.name AS technique, p.name AS period,
         collect(DISTINCT ex.title)[0..3] AS exhibitions
       ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
@@ -125,7 +125,7 @@ export async function onRequestGet({ request, env }) {
       WITH w, t, p, collect(DISTINCT ex.title)[0..3] AS exhibitions
       RETURN DISTINCT w.title AS title, w.dateText AS dateText,
         w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+        w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
         t.name AS technique, p.name AS period, exhibitions
       ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
     `;
@@ -145,7 +145,7 @@ export async function onRequestGet({ request, env }) {
         OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
         RETURN DISTINCT w.title AS title, w.dateText AS dateText,
           w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
           t.name AS technique, p.name AS period,
           collect(DISTINCT ex.title)[0..3] AS exhibitions
         ORDER BY w.yearFrom ASC, w.title ASC LIMIT $limit
@@ -160,7 +160,7 @@ export async function onRequestGet({ request, env }) {
         OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
         RETURN DISTINCT w.title AS title, w.dateText AS dateText,
           w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
           t.name AS technique, p.name AS period,
           collect(DISTINCT ex.title)[0..3] AS exhibitions
         UNION
@@ -170,7 +170,7 @@ export async function onRequestGet({ request, env }) {
         OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
         RETURN DISTINCT w.title AS title, w.dateText AS dateText,
           w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
           t.name AS technique, p.name AS period,
           collect(DISTINCT ex.title)[0..3] AS exhibitions
         UNION
@@ -180,7 +180,7 @@ export async function onRequestGet({ request, env }) {
         OPTIONAL MATCH (ex:Exhibition)-[:INCLUDES_ARTWORK]->(w)
         RETURN DISTINCT w.title AS title, w.dateText AS dateText,
           w.yearFrom AS yearFrom, w.medium AS medium, w.legacyRef AS legacyRef,
-          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug,
+          w.currentLocation AS location, w.dimensionsText AS dimensions, w.slug AS slug, w.imageUrl AS imageUrl, w.thumbnailUrl AS thumbnailUrl, w.artworkId AS artworkId,
           t.name AS technique, p.name AS period,
           collect(DISTINCT ex.title)[0..3] AS exhibitions
       `;
