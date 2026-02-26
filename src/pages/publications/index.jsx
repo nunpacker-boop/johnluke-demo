@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 const books = [
-  { label: "Standard hardback", badge: "Forthcoming", title: "John Luke: A Biography", body: "The first full biography of John Luke — from Ligoniel to the Slade, and back to Belfast.", to: "/publications/biography" },
+  { label: "Standard hardback", badge: "Forthcoming", title: "John Luke: A Biography", body: "The first full biography of John Luke — from North Belfast to the Slade, and back to Belfast.", to: "/publications/biography" },
   { label: "Spiral-bound · Educational", badge: "Forthcoming", title: "The Quiet Eye", body: "The mind and vision of drawing by John Luke. For educators and art students.", to: "/publications/the-quiet-eye" },
-  { label: "Large format hardback", badge: "Forthcoming", title: "The Selected Catalogue", body: "A museum-quality catalogue of approximately one hundred key works with deep scholarly commentary.", to: "/publications/selected-catalogue" },
+  { label: "Large format hardback", badge: "Forthcoming", title: "The Selected Catalogue", body: "A museum-quality catalogue of approximately fifty key works with deep scholarly commentary.", to: "/publications/selected-catalogue" },
   { label: "Standard hardback", badge: "Forthcoming", title: "The John Luke Letters", body: "Edited and annotated correspondence — John Luke in his own words to contemporaries and friends.", to: "/publications/the-letters" },
-  { label: "Spiral-bound · Educational & research", badge: "Forthcoming", title: "The Oil and the Egg", body: "John Luke's egg tempera painting technique — a complete technical account for educators and conservators.", to: "/publications/the-oil-and-the-egg" },
+  { label: "Spiral-bound · Educational & research", badge: "Forthcoming", title: "The Oil and the Egg", body: "John Luke's egg tempera and oil painting technique — a complete technical account for educators and conservators.", to: "/publications/the-oil-and-the-egg" },
   { label: "Standard hardback", badge: "Forthcoming", title: "John Luke's Philosophy of Art", body: "Luke's own thinking on art, technique, and vision — drawn from thousands of words of previously unpublished writing.", to: "/publications/philosophy-of-art" },
 ];
 export default function Publications() {
