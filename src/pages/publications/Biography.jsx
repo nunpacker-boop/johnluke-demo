@@ -7,7 +7,7 @@ export default function Page() {
           <div className="hero-content">
             <div className="preheading">Foundation Press</div>
             <h1>John Luke: A Biography</h1>
-            <p>The first full biography of John Luke — from his childhood in Ligoniel to his studies at the Slade, his return to Belfast, and a lifetime of quiet, extraordinary work.</p>
+            <p>The first full biography of John Luke — from his childhood in North Belfast to his studies at the Slade, his return to Belfast, and a lifetime of quiet, extraordinary work.</p>
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/publications">← Back to Publications</Link>
             </div>
