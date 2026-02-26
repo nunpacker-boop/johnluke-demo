@@ -18,6 +18,7 @@ import Works from "./pages/works/index.jsx";
 import SelectedCatalogue from "./pages/works/SelectedCatalogue.jsx";
 import LivingCatalogue from "./pages/works/LivingCatalogue.jsx";
 import Browse from "./pages/works/Browse.jsx";
+import ArtworkFactSheet from "./pages/works/ArtworkFactSheet.jsx";
 
 // Archive
 import Archive from "./pages/archive/index.jsx";
@@ -30,6 +31,7 @@ import RequestAccess from "./pages/archive/RequestAccess.jsx";
 // Exhibitions
 import Exhibitions from "./pages/exhibitions/index.jsx";
 import HistoricalExhibitions from "./pages/exhibitions/Historical.jsx";
+import ExhibitionFactSheet from "./pages/exhibitions/ExhibitionFactSheet.jsx";
 import FoundationEvents from "./pages/exhibitions/FoundationEvents.jsx";
 
 // Publications
@@ -83,6 +85,7 @@ export default function App() {
           <Route path="/works/selected-catalogue" element={<SelectedCatalogue />} />
           <Route path="/works/living-catalogue" element={<LivingCatalogue />} />
           <Route path="/works/browse" element={<Browse />} />
+          <Route path="/works/:artworkId" element={<ArtworkFactSheet />} />
 
           {/* Archive */}
           <Route path="/archive" element={<Archive />} />
@@ -95,6 +98,7 @@ export default function App() {
           {/* Exhibitions */}
           <Route path="/exhibitions" element={<Exhibitions />} />
           <Route path="/exhibitions/historical" element={<HistoricalExhibitions />} />
+          <Route path="/exhibitions/historical/:id" element={<ExhibitionFactSheet />} />
           <Route path="/exhibitions/events" element={<FoundationEvents />} />
 
           {/* Publications */}
