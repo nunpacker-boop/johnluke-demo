@@ -140,9 +140,20 @@ export default function ExhibitionFactSheet() {
             </div>
             {ex && (
               <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <button className="ex-print-btn" onClick={() => window.print()}>
+                <button className="ex-print-btn" onClick={() => {
+                  const prev = document.title;
+                  document.title = `John Luke - ${ex.title || "Exhibition"}${ex.yearText ? ` (${ex.yearText})` : ""} - Virtual Catalogue - John Luke Foundation ${new Date().getFullYear()}`;
+                  window.print();
+                  document.title = prev;
+                }}>
                   ⬇ Download / Print virtual catalogue
                 </button>
+                {ex.catalogueUrl && (
+                  <a href={ex.catalogueUrl} target="_blank" rel="noreferrer noopener"
+                    className="ex-print-btn" style={{ textDecoration: "none" }}>
+                    ↗ View original exhibition catalogue
+                  </a>
+                )}
                 <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: "1.4" }}>
                   In the print dialog, open <em>More settings</em> and uncheck <em>Headers and footers</em> for a clean PDF.
                 </div>

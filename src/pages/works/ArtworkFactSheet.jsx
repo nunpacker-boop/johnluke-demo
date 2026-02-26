@@ -343,7 +343,13 @@ export default function ArtworkFactSheet() {
             </div>
             {w && (
               <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <button className="aw-print-btn" onClick={() => window.print()}>
+                <button className="aw-print-btn" onClick={() => {
+                  const prev = document.title;
+                  const year = cleanYear(w.dateText);
+                  document.title = `John Luke - ${w.title || "Untitled"}${year ? ` (${year})` : ""} - Fact Sheet - John Luke Foundation ${new Date().getFullYear()}`;
+                  window.print();
+                  document.title = prev;
+                }}>
                   ⬇ Download / Print fact sheet
                 </button>
                 <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: "1.4" }}>
