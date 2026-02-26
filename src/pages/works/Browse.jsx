@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 
 // ── Result card ───────────────────────────────────────────────────────────────
 function ArtworkCard({ work }) {
@@ -10,7 +10,9 @@ function ArtworkCard({ work }) {
     : null;
 
   return (
-    <div className="artwork-card">
+    <Link
+      to={work.artworkId ? `/works/${work.artworkId}` : "#"}
+      className="artwork-card">
       <div className="artwork-card-image">
         {imageUrl && !imgError ? (
           <div className="artwork-img-protect">
@@ -22,7 +24,7 @@ function ArtworkCard({ work }) {
               onDragStart={(e) => e.preventDefault()}
               loading="lazy"
             />
-            <div className="artwork-img-shield" />
+            <div className="artwork-img-shield" onContextMenu={(e) => e.preventDefault()} />
           </div>
         ) : (
           <div className="artwork-card-no-image">
@@ -55,8 +57,9 @@ function ArtworkCard({ work }) {
         {work.location && (
           <div className="artwork-location">{work.location}</div>
         )}
+        <div className="artwork-view-more">View artwork →</div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -358,8 +361,9 @@ export default function Browse() {
         @media (max-width: 580px) { .artwork-grid { grid-template-columns: 1fr; } }
 
         /* ── Card ── */
-        .artwork-card { background: white; border: 1px solid var(--light); border-radius: 0.3rem; overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; }
+        .artwork-card { display: block; text-decoration: none; background: white; border: 1px solid var(--light); border-radius: 0.3rem; overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s; cursor: pointer; }
         .artwork-card:hover { box-shadow: 0 4px 16px rgba(4,36,54,0.1); border-color: #aab; }
+        .artwork-card:hover .artwork-view-more { opacity: 1; }
 
         /* Image area */
         .artwork-card-image { width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #f0ede8; display: flex; align-items: center; justify-content: center; }
@@ -379,6 +383,7 @@ export default function Browse() {
         .artwork-exhibitions { font-size: 0.75rem; color: var(--shadow); opacity: 0.5; margin-top: 3px; line-height: 1.4; }
         .artwork-exhibitions-label { font-weight: 600; }
         .artwork-location { font-size: 0.72rem; color: var(--shadow); opacity: 0.4; font-style: italic; }
+        .artwork-view-more { font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 6px; opacity: 0; transition: opacity 0.15s; }
       `}</style>
     </main>
   );
