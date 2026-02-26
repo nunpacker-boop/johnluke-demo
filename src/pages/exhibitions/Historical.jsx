@@ -27,7 +27,9 @@ function SafeNotes({ text, className }) {
       {parts.map((p, i) =>
         p.type === "link"
           ? <a key={i} href={p.href} target="_blank" rel="noreferrer noopener" className="ex-notes-link">{p.href}</a>
-          : <span key={i}>{p.value}</span>
+          : p.value.split("\n").map((line, j, arr) => (
+              <span key={`${i}-${j}`}>{line}{j < arr.length - 1 && <br />}</span>
+            ))
       )}
     </div>
   );
@@ -74,10 +76,10 @@ function ExhibitedWork({ work }) {
       </div>
       <div className="ex-work-info">
         {work.catalogueNumber && (
-          <div className="ex-work-catno">Cat. {work.catalogueNumber}</div>
+          <div className="ex-work-catno">Cat No.: {work.catalogueNumber}</div>
         )}
         <div className="ex-work-title">{work.title || "Untitled"}</div>
-        {work.dateText && <div className="ex-work-date">{work.dateText}</div>}
+        {work.dateText && <div className="ex-work-date">{String(work.dateText).replace(/\.0$/, "")}</div>}
         {work.medium   && <div className="ex-work-medium">{work.medium}</div>}
         {work.salePrice && (
           <div className="ex-work-price">
