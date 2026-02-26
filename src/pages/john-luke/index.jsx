@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 const cards = [
-  { label: "Biography", title: "Life & Times", body: "Born in Ligoniel, 1906. A life devoted to looking, drawing, and painting with extraordinary precision and patience.", to: "/john-luke/life-and-times" },
-  { label: "Practice", title: "Technique & Method", body: "Luke's mastery of egg tempera — a technique demanding rare discipline — and his approach to drawing from life.", to: "/john-luke/technique-and-method" },
+  { label: "Biography", title: "Life & Times", body: "Born in North Belfast, 1906. A life devoted to looking, drawing, and painting with extraordinary precision and patience.", to: "/john-luke/life-and-times" },
+  { label: "Practice", title: "Technique & Method", body: "Luke's mastery of egg tempera and oil painting — a technique demanding rare discipline — and his approach to drawing from life.", to: "/john-luke/technique-and-method" },
   { label: "Ideas", title: "Influences & Context", body: "The books he read, the artists he studied, and how Irish modernism shaped and was shaped by his work.", to: "/john-luke/influences-and-context" },
   { label: "Primary source", title: "John's Writing", body: "Thousands of words of Luke's own writing on art, technique, and vision — never before published in full.", to: "/john-luke/johns-writing" },
   { label: "Intellectual life", title: "Reading List", body: "The books John Luke read and annotated — from Cézanne's letters to Berenson on drawing.", to: "/john-luke/reading-list" },
-  { label: "Genealogy", title: "Family Tree", body: "The Luke family from Ligoniel — context for understanding the world he came from.", to: "/john-luke/family-tree" },
+  { label: "Genealogy", title: "Family Tree", body: "The Luke family from Ahoghill — context for understanding the world he came from.", to: "/john-luke/family-tree" },
 ];
 const links = ["/john-luke/life-and-times", "/john-luke/technique-and-method", "/john-luke/influences-and-context", "/john-luke/johns-writing", "/john-luke/reading-list", "/john-luke/family-tree"];
 const linkLabels = ["Life & Times", "Technique & Method", "Influences & Context", "John's Writing", "Reading List", "Family Tree"];
@@ -17,7 +17,7 @@ export default function JohnLuke() {
           <div className="hero-content">
             <div className="preheading">John Luke · 1906–1975</div>
             <h1>The artist, the work, the thinking</h1>
-            <p>John Luke was one of the most distinctive painters of twentieth-century Ireland — a master draughtsman and a pioneer of egg tempera whose disciplined vision produced a body of work unlike any other.</p>
+            <p>John Luke was one of the most distinctive painters of twentieth-century Ireland — a master draughtsman and a pioneer of egg tempera and oil painting whose disciplined vision produced a body of work unlike any other.</p>
             <div className="section-subnav">
               {links.map((to, i) => <Link key={to} to={to}>{linkLabels[i]}</Link>)}
             </div>

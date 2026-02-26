@@ -7,7 +7,7 @@ export default function Page() {
           <div className="hero-content">
             <div className="preheading">John Luke · Genealogy</div>
             <h1>Family Tree</h1>
-            <p>The Luke family from Ligoniel — the world John came from and the people who shaped his earliest years.</p>
+            <p>The Luke family from Ahoghill — the world John came from and the people who shaped his earliest years.</p>
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/john-luke">← Back to John Luke</Link>
             </div>

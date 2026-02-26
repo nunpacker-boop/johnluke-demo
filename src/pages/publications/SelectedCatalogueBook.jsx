@@ -7,7 +7,7 @@ export default function Page() {
           <div className="hero-content">
             <div className="preheading">Foundation Press · Catalogue</div>
             <h1>The Selected Catalogue</h1>
-            <p>A large-format hardback presenting approximately one hundred key works with museum-quality reproduction and deep scholarly commentary.</p>
+            <p>A large-format hardback presenting approximately fifty key works with museum-quality reproduction and deep scholarly commentary.</p>
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/publications">← Back to Publications</Link>
             </div>

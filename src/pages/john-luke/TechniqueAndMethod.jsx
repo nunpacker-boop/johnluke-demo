@@ -7,7 +7,7 @@ export default function Page() {
           <div className="hero-content">
             <div className="preheading">John Luke · Practice</div>
             <h1>Technique & Method</h1>
-            <p>Luke's mastery of egg tempera set him apart from his contemporaries — a technique requiring exceptional discipline that he made entirely his own.</p>
+            <p>Luke's mastery of egg tempera and oil painting set him apart from his contemporaries — a technique requiring exceptional discipline that he made entirely his own.</p>
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/john-luke">← Back to John Luke</Link>
             </div>

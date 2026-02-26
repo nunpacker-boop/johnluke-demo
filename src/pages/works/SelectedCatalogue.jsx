@@ -10,7 +10,7 @@ export default function SelectedCatalogue() {
             <div className="preheading">Works</div>
             <h1>Selected Catalogue of Works</h1>
             <p>
-              A curated selection—approximately one hundred key works—presented with deep commentary:
+              A curated selection—approximately fifty key works—presented with deep commentary:
               technique, context, intent, sequence, and relationships to other paintings, drawings,
               studies, and commissions.
             </p>
