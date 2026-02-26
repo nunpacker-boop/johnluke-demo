@@ -268,6 +268,14 @@ export default function ArtworkFactSheet() {
            PRINT STYLES
            ════════════════════════════════════════ */
         @media print {
+          /* ── Suppress browser-generated headers and footers ── */
+          @page {
+            margin: 15mm 15mm 18mm 15mm;
+          }
+          @page :first {
+            margin-top: 10mm;
+          }
+
           /* Hide everything except the fact sheet content */
           header, nav, footer, .aw-print-btn, .cite-copy,
           .cite-tabs, section.hero { display:none !important; }
@@ -295,8 +303,8 @@ export default function ArtworkFactSheet() {
           .aw-section-label { font-size:7pt; border-bottom:0.5pt solid #ccc; padding-bottom:4pt; margin-bottom:8pt; }
           .aw-dl { gap:3pt 16pt; font-size:9pt; }
 
-          /* Citations — simplified for print */
-          .cite-panel { border:0.5pt solid #ccc; break-before:avoid; margin-top:24pt; }
+          /* Citations — keep together, never split across pages */
+          .cite-panel { border:0.5pt solid #ccc; break-inside:avoid; break-before:auto; page-break-inside:avoid; margin-top:24pt; }
           .cite-header { padding:10pt 12pt 8pt; }
           .cite-body { padding:10pt 12pt; }
           .cite-text { font-size:8.5pt; line-height:1.5; }
@@ -305,7 +313,7 @@ export default function ArtworkFactSheet() {
           /* Show all citation formats stacked in print */
           .cite-tabs { display:none !important; }
           .cite-body-all { display:block !important; }
-          .cite-format-block { margin-bottom:10pt; padding-bottom:10pt; border-bottom:0.5pt solid #eee; }
+          .cite-format-block { break-inside:avoid; margin-bottom:10pt; padding-bottom:10pt; border-bottom:0.5pt solid #eee; }
           .cite-format-label { font-size:7pt; font-weight:bold; text-transform:uppercase;
             letter-spacing:0.05em; color:#666; margin-bottom:4pt; }
           .cite-format-text { font-size:8.5pt; line-height:1.5; font-family:Georgia,serif; }
@@ -331,9 +339,14 @@ export default function ArtworkFactSheet() {
               <Link className="cta-primary dull" to="/works/browse">← Browse works</Link>
             </div>
             {w && (
-              <button className="aw-print-btn" onClick={() => window.print()}>
-                ⬇ Download / Print fact sheet
-              </button>
+              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <button className="aw-print-btn" onClick={() => window.print()}>
+                  ⬇ Download / Print fact sheet
+                </button>
+                <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: "1.4" }}>
+                  In the print dialog, open <em>More settings</em> and uncheck <em>Headers and footers</em> for a clean PDF.
+                </div>
+              </div>
             )}
           </div>
         </article>
