@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 const cards = [
-  { label: "~100 key works", title: "Selected Catalogue", body: "A curated selection of John Luke's most significant works, presented with deep scholarly commentary, technique notes, and full provenance.", to: "/works/selected-catalogue" },
+  { label: "~50 key works", title: "Selected Catalogue", body: "A curated selection of John Luke's most significant works, presented with deep scholarly commentary, technique notes, and full provenance.", to: "/works/selected-catalogue" },
   { label: "215 works & growing", title: "Living Catalogue Raisonné", body: "A continuously evolving catalogue documenting every known, attributed, lost, or rediscovered work — evidence-based and non-final.", to: "/works/living-catalogue" },
   { label: "Search & filter", title: "Browse & Search", body: "Browse the full catalogue by period, medium, theme, location, exhibition, or technique. Search by title or raisonné number.", to: "/works/browse" },
 ];
