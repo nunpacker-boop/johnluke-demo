@@ -1,6 +1,38 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+// ── SafeNotes — renders plain text, converting bare URLs to clickable links ───
+function SafeNotes({ text, className }) {
+  if (!text) return null;
+
+  const parts = [];
+  const re = /https?:\/\/[^\s,)]+/g;
+  let last = 0, match;
+
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > last) {
+      parts.push({ type: "text", value: text.slice(last, match.index) });
+    }
+    // Trim trailing punctuation that's likely not part of the URL
+    const href = match[0].replace(/[.,;:!?'"]+$/, "");
+    parts.push({ type: "link", href });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) {
+    parts.push({ type: "text", value: text.slice(last) });
+  }
+
+  return (
+    <div className={className}>
+      {parts.map((p, i) =>
+        p.type === "link"
+          ? <a key={i} href={p.href} target="_blank" rel="noreferrer noopener" className="ex-notes-link">{p.href}</a>
+          : <span key={i}>{p.value}</span>
+      )}
+    </div>
+  );
+}
+
 // ── Reliability badge ─────────────────────────────────────────────────────────
 const RELIABILITY = {
   primary:   { label: "Primary source",   cls: "rel-primary" },
@@ -136,7 +168,7 @@ function ExhibitionRow({ ex, isOpen, onToggle }) {
                 <ReliabilityBadge value={ex.reliability} />
               </div>
             )}
-            {ex.notes && <div className="ex-detail-notes">{ex.notes}</div>}
+            {ex.notes && <SafeNotes text={ex.notes} className="ex-detail-notes" />}
           </div>
 
           {loading && (
@@ -300,6 +332,8 @@ export default function Historical() {
         .ex-detail-row { display:grid; grid-template-columns:120px 1fr; gap:8px; color:var(--shadow); }
         .ex-detail-label { color:var(--shadow); opacity:0.45; font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; padding-top:1px; }
         .ex-detail-notes { margin-top:8px; font-size:0.85rem; color:var(--shadow); opacity:0.7; font-style:italic; line-height:1.5; padding:10px 14px; background:#fffbe8; border-left:3px solid #e8c84a; border-radius:0 4px 4px 0; }
+        .ex-notes-link { color:var(--primary); text-decoration:underline; text-underline-offset:2px; font-style:normal; font-weight:500; }
+        .ex-notes-link:hover { opacity:0.7; }
         .ex-cat-link { color:var(--primary); text-decoration:underline; text-underline-offset:2px; }
 
         .ex-works-section { margin-top:4px; }
