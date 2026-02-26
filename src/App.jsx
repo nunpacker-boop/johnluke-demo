@@ -15,7 +15,7 @@ import FamilyTree from "./pages/john-luke/FamilyTree.jsx";
 
 // Works
 import Works from "./pages/works/index.jsx";
-import SelectedCatalogue from "./pages/works/SelectedCatalogue.jsx";
+import SelectedCatalogueTimeline from "./pages/works/SelectedCatalogueTimeline.jsx";
 import LivingCatalogue from "./pages/works/LivingCatalogue.jsx";
 import Browse from "./pages/works/Browse.jsx";
 import ArtworkFactSheet from "./pages/works/ArtworkFactSheet.jsx";
@@ -67,6 +67,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Full-bleed routes — outside Layout */}
+        <Route path="/works/selected-catalogue" element={<SelectedCatalogueTimeline />} />
+
         <Route element={<Layout />}>
           {/* Home */}
           <Route path="/" element={<Home />} />
@@ -82,7 +85,6 @@ export default function App() {
 
           {/* Works */}
           <Route path="/works" element={<Works />} />
-          <Route path="/works/selected-catalogue" element={<SelectedCatalogue />} />
           <Route path="/works/living-catalogue" element={<LivingCatalogue />} />
           <Route path="/works/browse" element={<Browse />} />
           <Route path="/works/:artworkId" element={<ArtworkFactSheet />} />
