@@ -138,6 +138,16 @@ export default function ExhibitionFactSheet() {
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/exhibitions/historical">← All exhibitions</Link>
             </div>
+            {ex && (
+              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <button className="ex-print-btn" onClick={() => window.print()}>
+                  ⬇ Download / Print virtual catalogue
+                </button>
+                <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: "1.4" }}>
+                  In the print dialog, open <em>More settings</em> and uncheck <em>Headers and footers</em> for a clean PDF.
+                </div>
+              </div>
+            )}
           </div>
         </article>
       </section>
@@ -145,6 +155,23 @@ export default function ExhibitionFactSheet() {
       <section className="panel light">
         <article>
           <div className="panel-content" style={{ width: "100%" }}>
+
+            {/* ── Print-only header ── */}
+            <div className="ex-print-header">
+              <div className="ex-print-header-inner">
+                <div>
+                  <div className="ex-print-foundation">John Luke Foundation</div>
+                  <div className="ex-print-title">{ex?.title || ""}</div>
+                  {ex?.yearText && <div className="ex-print-year">{ex.yearText}</div>}
+                </div>
+                <div className="ex-print-meta-right">
+                  johnluke.art<br />
+                  Accessed: {typeof window !== "undefined"
+                    ? new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+                    : ""}
+                </div>
+              </div>
+            </div>
 
             {loading && (
               <div className="ex-state">
@@ -313,6 +340,74 @@ export default function ExhibitionFactSheet() {
         .ex-loading-bar { width:160px; height:3px; background:var(--light); border-radius:2px; overflow:hidden; margin:0 auto 12px; }
         .ex-loading-fill { height:100%; background:var(--primary); animation:exLoad 1.2s ease-in-out infinite; }
         @keyframes exLoad { 0%{width:0;margin-left:0} 50%{width:60%;margin-left:20%} 100%{width:0;margin-left:100%} }
+
+        /* ── Print button ── */
+        .ex-print-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 16px;
+          border:1px solid rgba(255,255,255,0.3); border-radius:0.25rem;
+          background:transparent; color:rgba(255,255,255,0.8); font-size:0.82rem;
+          cursor:pointer; transition:all 0.15s; font-family:inherit; }
+        .ex-print-btn:hover { background:rgba(255,255,255,0.1); color:white; border-color:rgba(255,255,255,0.6); }
+
+        /* ── Print header (screen: hidden) ── */
+        .ex-print-header { display:none; }
+
+        /* ════════════════════════════════════════
+           PRINT STYLES
+           ════════════════════════════════════════ */
+        @media print {
+          @page { margin:15mm 15mm 18mm 15mm; }
+          @page :first { margin-top:10mm; }
+
+          header, nav, footer, .ex-print-btn, section.hero,
+          .ex-filter-bar, .fs-notes-link { display:none !important; }
+
+          body { background:white; color:black; font-size:10pt; }
+          .panel.light { padding:0 !important; }
+          article { max-width:100% !important; padding:0 !important; }
+
+          /* Show print header */
+          .ex-print-header { display:block !important; margin-bottom:20pt; }
+          .ex-print-header-inner { display:flex; justify-content:space-between; align-items:flex-end;
+            border-bottom:0.5pt solid #ccc; padding-bottom:10pt; }
+          .ex-print-foundation { font-size:7pt; text-transform:uppercase; letter-spacing:0.08em; color:#888; margin-bottom:3pt; }
+          .ex-print-title { font-size:16pt; font-weight:600; color:#042436; line-height:1.2; }
+          .ex-print-year { font-size:10pt; color:#444; margin-top:2pt; }
+          .ex-print-meta-right { font-size:7pt; color:#aaa; text-align:right; line-height:1.6; }
+
+          /* Fact sheet metadata card */
+          .fs-meta-card { border:0.5pt solid #ccc; padding:12pt; margin-bottom:16pt; border-radius:0; }
+          .fs-meta-grid { grid-template-columns:repeat(4, 1fr); gap:10pt 16pt; }
+          .fs-meta-label { font-size:6.5pt; }
+          .fs-meta-value { font-size:9pt; }
+
+          /* Notes */
+          .fs-notes { font-size:8pt; margin-top:10pt; padding-top:10pt; }
+
+          /* Catalogue heading */
+          .fs-catalogue-header { margin-bottom:10pt; break-after:avoid; }
+          .fs-catalogue-title { font-size:11pt; }
+          .fs-catalogue-sub { font-size:8pt; }
+
+          /* Catalogue grid — 4 columns for print */
+          .cat-grid { grid-template-columns:repeat(4, minmax(0,1fr)) !important; gap:10pt; }
+
+          /* Cards */
+          .cat-card { break-inside:avoid; border:0.5pt solid #ccc; border-radius:0; box-shadow:none !important; }
+          .cat-card:hover { box-shadow:none !important; }
+          .cat-img-shield { display:none !important; }
+          .cat-img-wrap img { pointer-events:auto; }
+          .cat-card-body { padding:5pt 6pt; }
+          .cat-catno  { font-size:6pt; }
+          .cat-title  { font-size:7.5pt; }
+          .cat-date   { font-size:6.5pt; }
+          .cat-medium { font-size:6pt; }
+          .cat-price  { font-size:6pt; }
+          .cat-catnotes { font-size:6pt; }
+          .cat-more   { display:none !important; }
+
+          /* Reliability badges */
+          .fs-reliability { border:0.5pt solid #ccc; background:none !important; color:#333 !important; font-size:6.5pt; }
+        }
       `}</style>
     </main>
   );

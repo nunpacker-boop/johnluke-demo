@@ -303,8 +303,11 @@ export default function ArtworkFactSheet() {
           .aw-section-label { font-size:7pt; border-bottom:0.5pt solid #ccc; padding-bottom:4pt; margin-bottom:8pt; }
           .aw-dl { gap:3pt 16pt; font-size:9pt; }
 
+          /* Hide screen-only citation panel — print version is in cite-body-all below */
+          .cite-panel { display:none !important; }
+
           /* Citations — keep together, never split across pages */
-          .cite-panel { border:0.5pt solid #ccc; break-inside:avoid; break-before:auto; page-break-inside:avoid; margin-top:24pt; }
+          .cite-body-all .cite-panel-print { border:0.5pt solid #ccc; break-inside:avoid; page-break-inside:avoid; margin-top:24pt; }
           .cite-header { padding:10pt 12pt 8pt; }
           .cite-body { padding:10pt 12pt; }
           .cite-text { font-size:8.5pt; line-height:1.5; }
