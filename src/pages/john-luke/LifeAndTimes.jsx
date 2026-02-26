@@ -7,7 +7,7 @@ export default function Page() {
           <div className="hero-content">
             <div className="preheading">John Luke · Biography</div>
             <h1>Life & Times</h1>
-            <p>Born in Ligoniel, Belfast in 1906, John Luke spent his life in pursuit of a singular vision — precise, patient, and deeply felt.</p>
+            <p>Born in Duncairn, Belfast in 1906, John Luke spent his life in pursuit of a singular vision — precise, patient, and deeply felt.</p>
             <div className="btn-duo">
               <Link className="cta-primary dull" to="/john-luke">← Back to John Luke</Link>
             </div>
