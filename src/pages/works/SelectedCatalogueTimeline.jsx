@@ -42,8 +42,8 @@ function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) 
   const CARD_SLOT = 280;  // card width (220) + gap (60)
   // Alternate left/right from centre: 0, -1, +1, -2, +2 ...
   const side = yearIndex % 2 === 0 ? 1 : -1;
-  const dist = Math.ceil(yearIndex / 2);
-  const offset = side * dist * CARD_SLOT;
+  const spreadDist = Math.ceil(yearIndex / 2);
+  const offset = side * spreadDist * CARD_SLOT;
   const x = yearToX(work.yearFrom || 1940) + offset;
   const y = artworkY(index, 1);
   const [imgErr, setImgErr] = useState(false);
