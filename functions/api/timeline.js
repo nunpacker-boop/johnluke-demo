@@ -178,9 +178,12 @@ export async function onRequestGet({ request, env }) {
         ORDER BY ex.yearFrom ASC
       `),
 
-      // All life events
+      // Life events — major John Luke events only (for Selected Catalogue overlay)
       runQuery(`
         MATCH (e:LifeEvent)
+        WHERE e.significance = 'major'
+          AND (e.subject = 'John Luke' OR e.subject IS NULL)
+          AND e.year >= 1920
         RETURN
           e.year         AS year,
           e.text         AS text,
