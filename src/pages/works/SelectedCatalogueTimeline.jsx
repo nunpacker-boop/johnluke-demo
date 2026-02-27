@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PX_PER_YEAR   = 520;   // horizontal scale
+const PX_PER_YEAR   = 800;   // horizontal scale
 const START_YEAR    = 1920;
-const END_YEAR      = 1985;
+const END_YEAR      = 1975;
 const CANVAS_WIDTH  = (END_YEAR - START_YEAR) * PX_PER_YEAR;
 const ARTWORK_ZONE  = { top: 80, bottom: 480 }; // vertical artwork area
 const AXIS_Y        = 540;   // timeline axis Y position
@@ -36,8 +36,10 @@ function artworkY(index, total) {
 }
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
-function ArtworkMarker({ work, index, scrollX, viewportW, onClick }) {
-  const x = yearToX(work.yearFrom || 1940) + (index % 3) * 25 - 12;
+function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) {
+  // Spread same-year artworks: each gets a full card-width slot (240px), centred on the year
+  const CARD_W = 240;
+  const x = yearToX(work.yearFrom || 1940) + (yearIndex - 0) * (CARD_W + 20);
   const y = artworkY(index, 1);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -187,8 +189,11 @@ function YearTicks({ scrollX, viewportW }) {
 
 // ── Period band labels ────────────────────────────────────────────────────────
 function PeriodBand({ period, index }) {
-  const x = yearToX(period.yearFrom || START_YEAR);
-  const w = ((period.yearTo || END_YEAR) - (period.yearFrom || START_YEAR)) * PX_PER_YEAR;
+  const rawX = yearToX(period.yearFrom || START_YEAR);
+  const rawW = ((period.yearTo || END_YEAR) - (period.yearFrom || START_YEAR)) * PX_PER_YEAR;
+  // Clamp so bands that start before START_YEAR still show their label
+  const x = Math.max(0, rawX);
+  const w = rawW - (x - rawX);
   return (
     <div className="tl-period-band" style={{ left: x, width: w }}>
       <div className="tl-period-name">{period.name}</div>
@@ -349,17 +354,17 @@ export default function SelectedCatalogueTimeline() {
         }
         .tl-topbar-left { display: flex; align-items: center; gap: 20px; }
         .tl-back {
-          color: rgba(255,255,255,0.5); font-size: 0.78rem; text-decoration: none;
+          color: rgba(255,255,255,0.5); font-size: 0.96rem; text-decoration: none;
           letter-spacing: 0.06em; text-transform: uppercase;
           transition: color 0.2s;
         }
         .tl-back:hover { color: rgba(255,255,255,0.9); }
         .tl-title {
-          color: rgba(255,255,255,0.85); font-size: 0.82rem;
+          color: rgba(255,255,255,0.85); font-size: 1rem;
           letter-spacing: 0.1em; text-transform: uppercase; font-family: Georgia, serif;
         }
         .tl-year-display {
-          color: rgba(255,255,255,0.9); font-size: 1.8rem;
+          color: rgba(255,255,255,0.9); font-size: 2.2rem;
           font-family: Georgia, serif; font-weight: 400;
           letter-spacing: 0.05em; min-width: 80px; text-align: right;
           text-shadow: 0 2px 12px rgba(0,0,0,0.4);
@@ -394,7 +399,7 @@ export default function SelectedCatalogueTimeline() {
         .tl-period-name {
           position: absolute;
           top: 20px; left: 20px;
-          font-size: 0.68rem;
+          font-size: 0.86rem;
           text-transform: uppercase;
           letter-spacing: 0.12em;
           color: rgba(255,255,255,0.55);
@@ -430,7 +435,7 @@ export default function SelectedCatalogueTimeline() {
           position: absolute;
           top: 16px; left: 50%;
           transform: translateX(-50%);
-          font-size: 0.65rem;
+          font-size: 1rem;
           color: rgba(255,255,255,0.3);
           letter-spacing: 0.04em;
           white-space: nowrap;
@@ -467,7 +472,7 @@ export default function SelectedCatalogueTimeline() {
         .tl-artwork-placeholder {
           width: 100%; height: 100%;
           display: flex; align-items: center; justify-content: center;
-          color: rgba(255,255,255,0.15); font-size: 0.7rem;
+          color: rgba(255,255,255,0.15); font-size: 0.88rem;
           font-family: monospace; letter-spacing: 0.05em;
         }
         .tl-artwork-caption {
@@ -475,16 +480,16 @@ export default function SelectedCatalogueTimeline() {
           pointer-events: none;
         }
         .tl-artwork-title {
-          font-size: 0.78rem; color: rgba(255,255,255,0.7);
+          font-size: 0.96rem; color: rgba(255,255,255,0.7);
           line-height: 1.3; font-style: italic;
           font-family: Georgia, serif;
         }
         .tl-artwork-year {
-          font-size: 0.65rem; color: rgba(255,255,255,0.35);
+          font-size: 1rem; color: rgba(255,255,255,0.35);
           margin-top: 2px; letter-spacing: 0.04em;
         }
         .tl-artwork-hint {
-          font-size: 0.62rem; color: rgba(255,255,255,0);
+          font-size: 0.8rem; color: rgba(255,255,255,0);
           letter-spacing: 0.08em; text-transform: uppercase;
           margin-top: 4px; transition: color 0.2s;
         }
@@ -538,18 +543,18 @@ export default function SelectedCatalogueTimeline() {
           max-width: 140px;
         }
         .tl-exhibition-year {
-          font-size: 0.6rem; color: rgba(255,255,255,0.3);
+          font-size: 0.96rem; color: rgba(255,255,255,0.3);
           letter-spacing: 0.06em; margin-bottom: 2px;
         }
         .tl-exhibition-solo .tl-exhibition-year { color: rgba(255,220,120,0.6); }
         .tl-exhibition-title {
-          font-size: 0.65rem; color: rgba(255,255,255,0.4);
+          font-size: 1rem; color: rgba(255,255,255,0.4);
           line-height: 1.3; font-style: italic;
           font-family: Georgia, serif;
         }
         .tl-exhibition-solo .tl-exhibition-title { color: rgba(255,220,120,0.7); }
         .tl-exhibition-venue {
-          font-size: 0.58rem; color: rgba(255,255,255,0.22);
+          font-size: 0.92rem; color: rgba(255,255,255,0.22);
           margin-top: 2px;
         }
 
@@ -590,7 +595,7 @@ export default function SelectedCatalogueTimeline() {
         .tl-instructions {
           position: absolute; bottom: 52px; left: 50%;
           transform: translateX(-50%);
-          font-size: 0.62rem; color: rgba(255,255,255,0.25);
+          font-size: 0.8rem; color: rgba(255,255,255,0.25);
           letter-spacing: 0.1em; text-transform: uppercase;
           white-space: nowrap; pointer-events: none;
           z-index: 100;
@@ -636,7 +641,7 @@ export default function SelectedCatalogueTimeline() {
           padding: 0 8px;
         }
         .tl-event-year {
-          font-size: 0.58rem;
+          font-size: 0.92rem;
           color: rgba(255,255,255,0.25);
           letter-spacing: 0.08em;
           margin-bottom: 4px;
@@ -646,7 +651,7 @@ export default function SelectedCatalogueTimeline() {
           color: rgba(255,220,120,0.5);
         }
         .tl-event-text {
-          font-size: 0.68rem;
+          font-size: 0.86rem;
           color: rgba(255,255,255,0.38);
           line-height: 1.5;
           font-family: Georgia, serif;
@@ -654,7 +659,7 @@ export default function SelectedCatalogueTimeline() {
           max-width: 220px;
         }
         .tl-event-major .tl-event-text {
-          font-size: 0.75rem;
+          font-size: 0.92rem;
           color: rgba(255,255,255,0.55);
           font-weight: 400;
         }
@@ -779,16 +784,26 @@ export default function SelectedCatalogueTimeline() {
             ))}
 
             {/* Artwork markers */}
-            {allArtworks.map((work, i) => (
-              <ArtworkMarker
-                key={work.artworkId || i}
-                work={work}
-                index={i}
-                scrollX={scrollX}
-                viewportW={viewportW}
-                onClick={handleArtworkClick}
-              />
-            ))}
+            {(() => {
+              // Assign a per-year sub-index so same-year artworks space out cleanly
+              const yearCount = {};
+              return allArtworks.map((work, i) => {
+                const yr = work.yearFrom;
+                const yIdx = yearCount[yr] ?? 0;
+                yearCount[yr] = yIdx + 1;
+                return (
+                  <ArtworkMarker
+                    key={work.artworkId || i}
+                    work={work}
+                    index={i}
+                    yearIndex={yIdx}
+                    scrollX={scrollX}
+                    viewportW={viewportW}
+                    onClick={handleArtworkClick}
+                  />
+                );
+              });
+            })()}
           </div>
 
           {/* Instructions */}
