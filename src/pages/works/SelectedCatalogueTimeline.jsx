@@ -321,31 +321,13 @@ export default function SelectedCatalogueTimeline() {
     setBgStyle({ background: `linear-gradient(160deg, ${palette.from} 0%, ${palette.to} 100%)` });
   }, [scrollX, viewportW, data]);
 
-  // Collect all artworks from all periods, sorted by year
-  const allArtworks = (data?.periods || [])
-    .flatMap(p => p.artworks || [])
-    .filter(w => w.yearFrom)
-    .sort((a, b) => a.yearFrom - b.yearFrom);
 
-  const allExhibitions = (data?.exhibitions || [])
-    .filter(ex => ex.yearFrom || ex.yearText);
-
-  const allLifeEvents = (data?.lifeEvents || [])
-    .filter(e => e.year)
-    .sort((a, b) => a.year - b.year);
-
-
-  const handleArtworkClick = (work) => {
-    navigate(`/works/${work.artworkId}`);
-  };
-
-  const currentYear = Math.round(xToYear(scrollX + viewportW / 2));
-  const progress = Math.max(0, Math.min(1, (scrollX) / Math.max(1, CANVAS_WIDTH - viewportW)));
-
-  return (
-    <div className="tl-root" style={bgStyle} ref={containerRef}>
-      <style>{`
-        * { box-sizing: border-box; }
+  // ── Scoped stylesheet — injected on mount, removed on unmount ────────────
+  useEffect(() => {
+    const el = document.createElement('style');
+    el.setAttribute('data-tl', '1');
+    el.textContent = `
+        .tl-root, .tl-root * { box-sizing: border-box; }
 
         .tl-root {
           position: fixed; inset: 0;
@@ -700,7 +682,34 @@ export default function SelectedCatalogueTimeline() {
           50%  { width:60%; left:20%; }
           100% { width:0; left:100%; }
         }
-      `}</style>
+      `;
+    document.head.appendChild(el);
+    return () => { document.head.removeChild(el); };
+  }, []);
+
+  // Collect all artworks from all periods, sorted by year
+  const allArtworks = (data?.periods || [])
+    .flatMap(p => p.artworks || [])
+    .filter(w => w.yearFrom)
+    .sort((a, b) => a.yearFrom - b.yearFrom);
+
+  const allExhibitions = (data?.exhibitions || [])
+    .filter(ex => ex.yearFrom || ex.yearText);
+
+  const allLifeEvents = (data?.lifeEvents || [])
+    .filter(e => e.year)
+    .sort((a, b) => a.year - b.year);
+
+
+  const handleArtworkClick = (work) => {
+    navigate(`/works/${work.artworkId}`);
+  };
+
+  const currentYear = Math.round(xToYear(scrollX + viewportW / 2));
+  const progress = Math.max(0, Math.min(1, (scrollX) / Math.max(1, CANVAS_WIDTH - viewportW)));
+
+  return (
+    <div className="tl-root" style={bgStyle} ref={containerRef}>
 
       {/* Loading */}
       {loading && (
