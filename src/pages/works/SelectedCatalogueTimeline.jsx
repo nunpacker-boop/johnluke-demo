@@ -131,6 +131,39 @@ function ExhibitionMarker({ ex, scrollX, viewportW }) {
   );
 }
 
+// ── Life event marker below axis ──────────────────────────────────────────────
+function LifeEventMarker({ event, scrollX, viewportW }) {
+  const x = yearToX(event.year);
+
+  const centreX   = scrollX + viewportW / 2;
+  const dist      = Math.abs(x - centreX);
+  const fadeStart = viewportW * 0.28;
+  const fadeEnd   = viewportW * 0.52;
+  const opacity   = dist < fadeStart
+    ? 1
+    : dist > fadeEnd
+    ? 0
+    : 1 - (dist - fadeStart) / (fadeEnd - fadeStart);
+
+  if (opacity < 0.03) return null;
+
+  const isMajor = event.significance === "major";
+
+  return (
+    <div
+      className={`tl-event ${isMajor ? "tl-event-major" : ""}`}
+      style={{ left: x, opacity }}
+    >
+      <div className="tl-event-line" />
+      <div className="tl-event-dot" />
+      <div className="tl-event-body">
+        <div className="tl-event-year">{event.year}</div>
+        <div className="tl-event-text">{event.text}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Year tick marks ───────────────────────────────────────────────────────────
 function YearTicks({ scrollX, viewportW }) {
   const startYear = Math.floor(xToYear(scrollX - viewportW)) - 1;
@@ -296,6 +329,11 @@ export default function SelectedCatalogueTimeline() {
 
   const allExhibitions = (data?.exhibitions || [])
     .filter(ex => ex.yearFrom || ex.yearText);
+
+  const allLifeEvents = (data?.lifeEvents || [])
+    .filter(e => e.year)
+    .sort((a, b) => a.year - b.year);
+
 
   const handleArtworkClick = (work) => {
     navigate(`/works/${work.artworkId}`);
@@ -577,6 +615,68 @@ export default function SelectedCatalogueTimeline() {
           font-family: Georgia, serif;
         }
 
+
+        /* ── Life event markers ── */
+        .tl-event {
+          position: absolute;
+          top: ${AXIS_Y}px;
+          transform: translateX(-50%);
+          pointer-events: none;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 240px;
+        }
+        .tl-event-line {
+          width: 1px;
+          height: 12px;
+          background: rgba(255,255,255,0.1);
+          flex-shrink: 0;
+        }
+        .tl-event-major .tl-event-line {
+          background: rgba(255,220,120,0.25);
+          height: 18px;
+        }
+        .tl-event-dot {
+          width: 4px; height: 4px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.2);
+          flex-shrink: 0;
+          margin-bottom: 8px;
+        }
+        .tl-event-major .tl-event-dot {
+          width: 6px; height: 6px;
+          background: rgba(255,220,120,0.4);
+          box-shadow: 0 0 6px rgba(255,220,120,0.3);
+        }
+        .tl-event-body {
+          text-align: center;
+          padding: 0 8px;
+        }
+        .tl-event-year {
+          font-size: 0.58rem;
+          color: rgba(255,255,255,0.25);
+          letter-spacing: 0.08em;
+          margin-bottom: 4px;
+          font-family: Georgia, serif;
+        }
+        .tl-event-major .tl-event-year {
+          color: rgba(255,220,120,0.5);
+        }
+        .tl-event-text {
+          font-size: 0.68rem;
+          color: rgba(255,255,255,0.38);
+          line-height: 1.5;
+          font-family: Georgia, serif;
+          font-style: italic;
+          max-width: 220px;
+        }
+        .tl-event-major .tl-event-text {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.55);
+          font-weight: 400;
+        }
+
         /* ── Loading / error states ── */
         .tl-loading {
           position: fixed; inset: 0;
@@ -654,6 +754,16 @@ export default function SelectedCatalogueTimeline() {
               <ExhibitionMarker
                 key={ex.exhibitionId || i}
                 ex={ex}
+                scrollX={scrollX}
+                viewportW={viewportW}
+              />
+            ))}
+
+            {/* Life event markers */}
+            {allLifeEvents.map((event, i) => (
+              <LifeEventMarker
+                key={`event-${event.year}-${i}`}
+                event={event}
                 scrollX={scrollX}
                 viewportW={viewportW}
               />

@@ -117,7 +117,7 @@ export async function onRequestGet({ request, env }) {
 
   try {
     // ── Run queries in parallel ──────────────────────────────────────────────
-    const [dbPeriods, allArtworks, exhibitions] = await Promise.all([
+    const [dbPeriods, allArtworks, exhibitions, lifeEvents] = await Promise.all([
 
       // Periods with linked artworks
       runQuery(`
@@ -177,6 +177,17 @@ export async function onRequestGet({ request, env }) {
           ex.exhibitionType AS exhibitionType
         ORDER BY ex.yearFrom ASC
       `),
+
+      // All life events
+      runQuery(`
+        MATCH (e:LifeEvent)
+        RETURN
+          e.year         AS year,
+          e.text         AS text,
+          e.tags         AS tags,
+          e.significance AS significance
+        ORDER BY e.year ASC
+      `),
     ]);
 
     let periods;
@@ -202,7 +213,7 @@ export async function onRequestGet({ request, env }) {
     }
 
     return new Response(
-      JSON.stringify({ periods, exhibitions, source }),
+      JSON.stringify({ periods, exhibitions, lifeEvents, source }),
       { headers: cors }
     );
 
@@ -212,6 +223,7 @@ export async function onRequestGet({ request, env }) {
       JSON.stringify({
         periods:      CANONICAL_PERIODS,
         exhibitions:  [],
+        lifeEvents:   [],
         source:       "error-fallback",
         error:        err.message,
       }),
