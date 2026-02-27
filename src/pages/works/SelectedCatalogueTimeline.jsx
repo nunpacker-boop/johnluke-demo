@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PX_PER_YEAR   = 800;   // horizontal scale
-const START_YEAR    = 1920;
-const END_YEAR      = 1975;
-const CANVAS_WIDTH  = (END_YEAR - START_YEAR) * PX_PER_YEAR;
+const PX_PER_YEAR     = 800;   // horizontal scale
+const START_YEAR      = 1920;
+const END_YEAR        = 1975;
+const CANVAS_PADDING  = 600;   // breathing room left and right
+const CANVAS_WIDTH    = (END_YEAR - START_YEAR) * PX_PER_YEAR + CANVAS_PADDING * 2;
 const ARTWORK_ZONE  = { top: 80, bottom: 480 }; // vertical artwork area
 const AXIS_Y        = 540;   // timeline axis Y position
 const VIEWPORT_PAD  = 800;   // render artworks within this px beyond viewport edge
@@ -22,11 +23,11 @@ const PERIOD_PALETTES = [
 ];
 
 function yearToX(year) {
-  return (year - START_YEAR) * PX_PER_YEAR;
+  return CANVAS_PADDING + (year - START_YEAR) * PX_PER_YEAR;
 }
 
 function xToYear(x) {
-  return START_YEAR + x / PX_PER_YEAR;
+  return START_YEAR + (x - CANVAS_PADDING) / PX_PER_YEAR;
 }
 
 // Deterministic Y position for artwork — staggers high/low based on index
@@ -37,9 +38,13 @@ function artworkY(index, total) {
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
 function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) {
-  // Spread same-year artworks: each gets a full card-width slot (240px), centred on the year
-  const CARD_W = 240;
-  const x = yearToX(work.yearFrom || 1940) + (yearIndex - 0) * (CARD_W + 20);
+  // Spread same-year artworks symmetrically around the year mark
+  const CARD_SLOT = 280;  // card width (220) + gap (60)
+  // Alternate left/right from centre: 0, -1, +1, -2, +2 ...
+  const side = yearIndex % 2 === 0 ? 1 : -1;
+  const dist = Math.ceil(yearIndex / 2);
+  const offset = side * dist * CARD_SLOT;
+  const x = yearToX(work.yearFrom || 1940) + offset;
   const y = artworkY(index, 1);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -398,7 +403,7 @@ export default function SelectedCatalogueTimeline() {
         }
         .tl-period-name {
           position: absolute;
-          top: 20px; left: 20px;
+          top: 80px; left: 20px;
           font-size: 0.86rem;
           text-transform: uppercase;
           letter-spacing: 0.12em;
