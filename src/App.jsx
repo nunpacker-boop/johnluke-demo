@@ -3,6 +3,7 @@ import Layout from "./components/Layout.jsx";
 
 // Top-level
 import Home from "./pages/Home.jsx";
+import LifeAndTimesTimeline from "./pages/LifeAndTimes.jsx";
 
 // John Luke
 import JohnLuke from "./pages/john-luke/index.jsx";
@@ -69,6 +70,7 @@ export default function App() {
       <Routes>
         {/* Full-bleed routes — outside Layout */}
         <Route path="/works/selected-catalogue" element={<SelectedCatalogueTimeline />} />
+        <Route path="/life-and-times" element={<LifeAndTimesTimeline />} />
 
         <Route element={<Layout />}>
           {/* Home */}
