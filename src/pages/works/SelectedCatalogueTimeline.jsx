@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PX_PER_YEAR   = 320;   // horizontal scale
+const PX_PER_YEAR   = 520;   // horizontal scale
 const START_YEAR    = 1920;
 const END_YEAR      = 1985;
 const CANVAS_WIDTH  = (END_YEAR - START_YEAR) * PX_PER_YEAR;
@@ -31,13 +31,13 @@ function xToYear(x) {
 
 // Deterministic Y position for artwork — staggers high/low based on index
 function artworkY(index, total) {
-  const pattern = [160, 300, 200, 380, 130, 320, 250, 150, 350, 210];
+  const pattern = [80, 200, 120, 250, 60, 220, 150, 90, 240, 140];
   return ARTWORK_ZONE.top + pattern[index % pattern.length];
 }
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
 function ArtworkMarker({ work, index, scrollX, viewportW, onClick }) {
-  const x = yearToX(work.yearFrom || 1940) + (index % 3) * 60 - 30;
+  const x = yearToX(work.yearFrom || 1940) + (index % 3) * 25 - 12;
   const y = artworkY(index, 1);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -415,7 +415,7 @@ export default function SelectedCatalogueTimeline() {
           font-size: 0.68rem;
           text-transform: uppercase;
           letter-spacing: 0.12em;
-          color: rgba(255,255,255,0.18);
+          color: rgba(255,255,255,0.55);
           font-family: Georgia, serif;
           white-space: nowrap;
           pointer-events: none;
