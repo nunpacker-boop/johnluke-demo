@@ -30,10 +30,11 @@ function xToYear(x) {
   return START_YEAR + (x - CANVAS_PADDING) / PX_PER_YEAR;
 }
 
-// Deterministic Y position for artwork — staggers high/low based on index
-function artworkY(index, total) {
-  const pattern = [80, 200, 120, 250, 60, 220, 150, 90, 240, 140];
-  return ARTWORK_ZONE.top + pattern[index % pattern.length];
+// Y position for artwork — rows based on yearIndex to prevent same-year overlap
+function artworkY(index, yearIndex) {
+  // Allocate rows: 0 → top row, 1 → mid, 2 → bottom, repeat
+  const rows = [60, 190, 320, 100, 250, 150];
+  return ARTWORK_ZONE.top + rows[yearIndex % rows.length];
 }
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) 
   const spreadDist = Math.ceil(yearIndex / 2);
   const offset = side * spreadDist * CARD_SLOT;
   const x = yearToX(work.yearFrom || 1940) + offset;
-  const y = artworkY(index, 1);
+  const y = artworkY(index, yearIndex);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
