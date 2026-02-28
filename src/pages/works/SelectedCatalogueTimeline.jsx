@@ -108,6 +108,26 @@ function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) 
   );
 }
 
+// ── Life event marker — major John Luke events below axis ────────────────────
+function LifeEventMarker({ event, scrollX, viewportW }) {
+  const x = yearToX(event.year);
+  const centreX = scrollX + viewportW / 2;
+  const dist    = Math.abs(x - centreX);
+  const opacity = Math.max(0, 1 - dist / (viewportW * 0.5));
+  if (opacity < 0.03) return null;
+
+  return (
+    <div className="tl-event" style={{ left: x, opacity }}>
+      <div className="tl-event-dot" />
+      <div className="tl-event-line" />
+      <div className="tl-event-body">
+        <div className="tl-event-year">{event.year}</div>
+        <div className="tl-event-text">{event.text}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Exhibition marker on axis ─────────────────────────────────────────────────
 function ExhibitionMarker({ ex, scrollX, viewportW }) {
   const year = ex.yearFrom || parseInt(ex.yearText) || null;
@@ -674,6 +694,10 @@ export default function SelectedCatalogueTimeline() {
   const allExhibitions = (data?.exhibitions || [])
     .filter(ex => ex.yearFrom || ex.yearText);
 
+  const allLifeEvents = (data?.lifeEvents || [])
+    .filter(e => e.year)
+    .sort((a, b) => a.year - b.year);
+
 
 
   const handleArtworkClick = (work) => {
@@ -738,6 +762,16 @@ export default function SelectedCatalogueTimeline() {
               <ExhibitionMarker
                 key={ex.exhibitionId || i}
                 ex={ex}
+                scrollX={scrollX}
+                viewportW={viewportW}
+              />
+            ))}
+
+            {/* Key life event markers */}
+            {allLifeEvents.map((event, i) => (
+              <LifeEventMarker
+                key={"evt-" + (event.year) + "-" + i}
+                event={event}
                 scrollX={scrollX}
                 viewportW={viewportW}
               />
