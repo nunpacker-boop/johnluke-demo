@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 
 // Top-level
@@ -7,7 +7,6 @@ import LifeAndTimesTimeline from "./pages/LifeAndTimes.jsx";
 
 // John Luke
 import JohnLuke from "./pages/john-luke/index.jsx";
-import LifeAndTimes from "./pages/john-luke/LifeAndTimes.jsx";
 import TechniqueAndMethod from "./pages/john-luke/TechniqueAndMethod.jsx";
 import InfluencesAndContext from "./pages/john-luke/InfluencesAndContext.jsx";
 import JohnsWriting from "./pages/john-luke/JohnsWriting.jsx";
@@ -78,7 +77,7 @@ export default function App() {
 
           {/* John Luke */}
           <Route path="/john-luke" element={<JohnLuke />} />
-          <Route path="/john-luke/life-and-times" element={<LifeAndTimes />} />
+          <Route path="/john-luke/life-and-times" element={<Navigate to="/life-and-times" replace />} />
           <Route path="/john-luke/technique-and-method" element={<TechniqueAndMethod />} />
           <Route path="/john-luke/influences-and-context" element={<InfluencesAndContext />} />
           <Route path="/john-luke/johns-writing" element={<JohnsWriting />} />
