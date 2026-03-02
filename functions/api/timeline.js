@@ -134,7 +134,8 @@ export async function onRequestGet({ request, env }) {
             medium:       w.medium,
             thumbnailUrl: w.thumbnailUrl,
             imageUrl:     w.imageUrl,
-            selected:     coalesce(w.selectedCatalogue, false)
+            selected:     coalesce(w.selectedCatalogue, false),
+            isStudy:      coalesce(w.isStudy, false)
           } ELSE null END) AS allWorks
         RETURN
           p.name        AS name,
@@ -160,7 +161,8 @@ export async function onRequestGet({ request, env }) {
           w.medium       AS medium,
           w.thumbnailUrl AS thumbnailUrl,
           w.imageUrl     AS imageUrl,
-          coalesce(w.selectedCatalogue, false) AS selected
+          coalesce(w.selectedCatalogue, false) AS selected,
+          coalesce(w.isStudy, false) AS isStudy
         ORDER BY w.yearFrom ASC
       `),
 

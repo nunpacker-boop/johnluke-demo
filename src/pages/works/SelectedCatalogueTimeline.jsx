@@ -7,9 +7,11 @@ const START_YEAR      = 1920;
 const END_YEAR        = 1975;
 const CANVAS_PADDING  = 600;   // breathing room left and right
 const CANVAS_WIDTH    = (END_YEAR - START_YEAR) * PX_PER_YEAR + CANVAS_PADDING * 2;
-const ARTWORK_ZONE  = { top: 80, bottom: 480 }; // vertical artwork area
 const AXIS_Y        = 540;   // timeline axis Y position
 const VIEWPORT_PAD  = 800;   // render artworks within this px beyond viewport edge
+// Two artwork bands: primary above, studies below primary
+const PRIMARY_BAND  = { top: 60,  bottom: 300 };  // major works
+const STUDY_BAND    = { top: 310, bottom: 490 };   // studies / secondary works
 
 // Period palette — each period has a background gradient pair
 const PERIOD_PALETTES = [
@@ -30,23 +32,24 @@ function xToYear(x) {
   return START_YEAR + (x - CANVAS_PADDING) / PX_PER_YEAR;
 }
 
-// Y position for artwork — rows based on yearIndex to prevent same-year overlap
-function artworkY(index, yearIndex) {
-  // Allocate rows: 0 → top row, 1 → mid, 2 → bottom, repeat
-  const rows = [60, 190, 320, 100, 250, 150];
-  return ARTWORK_ZONE.top + rows[yearIndex % rows.length];
+// Y position for artwork — uses correct band based on isStudy flag
+function artworkY(yearIndex, isStudy) {
+  const band = isStudy ? STUDY_BAND : PRIMARY_BAND;
+  const rows = [0, 80, 40, 120, 20, 100];   // stagger within band
+  const bandHeight = band.bottom - band.top - 160; // leave room for card
+  return band.top + (rows[yearIndex % rows.length] / 120) * bandHeight;
 }
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
 function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) {
-  // Spread same-year artworks symmetrically around the year mark
+  const isStudy = !!work.isStudy;
+  // Spread same-year artworks within their band symmetrically
   const CARD_SLOT = 280;  // card width (220) + gap (60)
-  // Alternate left/right from centre: 0, -1, +1, -2, +2 ...
   const side = yearIndex % 2 === 0 ? 1 : -1;
   const spreadDist = Math.ceil(yearIndex / 2);
   const offset = side * spreadDist * CARD_SLOT;
   const x = yearToX(work.yearFrom || 1940) + offset;
-  const y = artworkY(index, yearIndex);
+  const y = artworkY(yearIndex, isStudy);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -68,11 +71,11 @@ function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) 
 
   return (
     <div
-      className="tl-artwork"
+      className={`tl-artwork${isStudy ? " tl-artwork-study" : ""}`}
       style={{
         left: x,
         top: y,
-        opacity,
+        opacity: isStudy ? opacity * 0.82 : opacity,
         transform: `translateY(${(1 - opacity) * 18}px) scale(${0.94 + opacity * 0.06})`,
       }}
       onClick={() => onClick(work)}
@@ -489,6 +492,40 @@ export default function SelectedCatalogueTimeline() {
         }
         .tl-artwork:hover .tl-artwork-hint { color: rgba(255,255,255,0.45); }
 
+        /* ── Study band separator ── */
+        .tl-band-sep {
+          position: absolute;
+          top: ${STUDY_BAND.top - 10}px;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(to right,
+            transparent,
+            rgba(255,255,255,0.04) 10%,
+            rgba(255,255,255,0.04) 90%,
+            transparent
+          );
+          pointer-events: none;
+        }
+        .tl-band-label {
+          position: fixed;
+          left: 20px;
+          font-size: 0.62rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.14);
+          font-family: Georgia, serif;
+          pointer-events: none;
+          z-index: 5;
+        }
+        /* ── Study artwork — slightly smaller ── */
+        .tl-artwork-study .tl-artwork-img {
+          width: 180px;
+        }
+        .tl-artwork-study .tl-artwork-img img {
+          width: 180px;
+        }
+
         /* ── Vertical drop line from artwork to axis ── */
         .tl-artwork::after {
           content: '';
@@ -692,6 +729,10 @@ export default function SelectedCatalogueTimeline() {
     .filter(w => w.yearFrom)
     .sort((a, b) => a.yearFrom - b.yearFrom);
 
+  // Split into primary and study bands — each gets its own yearIndex counter
+  const primaryArtworks = allArtworks.filter(w => !w.isStudy);
+  const studyArtworks   = allArtworks.filter(w => !!w.isStudy);
+
   const allExhibitions = (data?.exhibitions || [])
     .filter(ex => ex.yearFrom || ex.yearText);
 
@@ -779,11 +820,40 @@ export default function SelectedCatalogueTimeline() {
             ))}
 
 
-            {/* Artwork markers */}
+            {/* Band separator + labels */}
+            <div className="tl-band-sep" />
+            <div className="tl-band-label" style={{ top: PRIMARY_BAND.top + 2 }}>
+              Works
+            </div>
+            <div className="tl-band-label" style={{ top: STUDY_BAND.top + 2 }}>
+              Studies
+            </div>
+
+            {/* Primary artwork markers */}
             {(() => {
-              // Assign a per-year sub-index so same-year artworks space out cleanly
               const yearCount = {};
-              return allArtworks.map((work, i) => {
+              return primaryArtworks.map((work, i) => {
+                const yr = work.yearFrom;
+                const yIdx = yearCount[yr] ?? 0;
+                yearCount[yr] = yIdx + 1;
+                return (
+                  <ArtworkMarker
+                    key={work.artworkId || i}
+                    work={work}
+                    index={i}
+                    yearIndex={yIdx}
+                    scrollX={scrollX}
+                    viewportW={viewportW}
+                    onClick={handleArtworkClick}
+                  />
+                );
+              });
+            })()}
+
+            {/* Study / secondary artwork markers */}
+            {(() => {
+              const yearCount = {};
+              return studyArtworks.map((work, i) => {
                 const yr = work.yearFrom;
                 const yIdx = yearCount[yr] ?? 0;
                 yearCount[yr] = yIdx + 1;
