@@ -219,6 +219,27 @@ export default function ArtworkFactSheet() {
         .aw-own-source { font-size:0.76rem; color:var(--shadow); opacity:0.45; font-style:italic; }
         .aw-own-notes  { font-size:0.76rem; color:#ae6818; margin-top:2px; }
 
+        /* ── Related works ── */
+        .aw-related { max-width:760px; margin:0 auto 40px; }
+        .aw-related-label { font-size:0.72rem; font-weight:700; text-transform:uppercase;
+          letter-spacing:0.1em; color:var(--shadow); opacity:0.5; margin-bottom:16px;
+          padding-bottom:6px; border-bottom:1px solid var(--light); }
+        .aw-related-grid { display:flex; flex-wrap:wrap; gap:16px; }
+        .aw-related-card { display:flex; gap:12px; align-items:flex-start;
+          background:rgba(0,0,0,0.02); border:1px solid var(--light);
+          border-radius:6px; padding:10px 12px; text-decoration:none;
+          color:inherit; transition:border-color 0.15s; flex:1; min-width:240px; max-width:360px; }
+        .aw-related-card:hover { border-color:var(--primary); }
+        .aw-related-thumb { width:56px; height:56px; object-fit:cover; border-radius:3px; flex-shrink:0; background:var(--light); display:block; }
+        .aw-related-thumb-ph { width:56px; height:56px; border-radius:3px; flex-shrink:0;
+          background:var(--light); display:flex; align-items:center; justify-content:center;
+          font-size:0.6rem; color:var(--shadow); }
+        .aw-related-info { flex:1; min-width:0; }
+        .aw-related-rel { font-size:0.65rem; font-weight:700; text-transform:uppercase;
+          letter-spacing:0.09em; color:var(--shadow); opacity:0.55; margin-bottom:3px; }
+        .aw-related-title { font-family:var(--serif); font-size:0.9rem; line-height:1.3; margin-bottom:2px; }
+        .aw-related-meta { font-size:0.75rem; color:var(--shadow); opacity:0.7; }
+
         /* ── Certainty badges ── */
         .cert-badge { display:inline-block; padding:1px 7px; border-radius:2rem;
           font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
@@ -523,6 +544,51 @@ export default function ArtworkFactSheet() {
 
                   </div>
                 </div>
+
+                {/* ── Related works — studies and primary work ── */}
+                {((w.studies && w.studies.length > 0) || w.primaryWork) && (
+                  <div className="aw-related">
+                    <div className="aw-related-label">Related works</div>
+                    <div className="aw-related-grid">
+                      {w.primaryWork && (
+                        <Link to={`/works/${w.primaryWork.artworkId}`} className="aw-related-card">
+                          {w.primaryWork.thumbnailUrl || w.primaryWork.imageUrl
+                            ? <img className="aw-related-thumb"
+                                src={w.primaryWork.thumbnailUrl || w.primaryWork.imageUrl}
+                                alt={w.primaryWork.title} />
+                            : <div className="aw-related-thumb-ph">◎</div>
+                          }
+                          <div className="aw-related-info">
+                            <div className="aw-related-rel">Primary work</div>
+                            <div className="aw-related-title">{w.primaryWork.title}</div>
+                            <div className="aw-related-meta">
+                              {w.primaryWork.dateText && <span>{w.primaryWork.dateText}</span>}
+                              {w.primaryWork.medium && <span> · {w.primaryWork.medium}</span>}
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+                      {w.studies && w.studies.map((study, i) => (
+                        <Link key={i} to={`/works/${study.artworkId}`} className="aw-related-card">
+                          {study.thumbnailUrl || study.imageUrl
+                            ? <img className="aw-related-thumb"
+                                src={study.thumbnailUrl || study.imageUrl}
+                                alt={study.title} />
+                            : <div className="aw-related-thumb-ph">◎</div>
+                          }
+                          <div className="aw-related-info">
+                            <div className="aw-related-rel">Study</div>
+                            <div className="aw-related-title">{study.title}</div>
+                            <div className="aw-related-meta">
+                              {study.dateText && <span>{study.dateText}</span>}
+                              {study.medium && <span> · {study.medium}</span>}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Citations — full width below columns ── */}
                 <CitationsPanel artwork={w} />

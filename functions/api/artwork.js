@@ -52,9 +52,31 @@ export async function onRequestGet({ request, env }) {
     // Ownership periods
     OPTIONAL MATCH (w)-[op:OWNED_BY]->(o:Owner)
 
+    // Studies of this work (w is the primary)
+    OPTIONAL MATCH (study:Artwork)-[:STUDY_FOR]->(w)
+
+    // Primary work this is a study for (w is the study)
+    OPTIONAL MATCH (w)-[:STUDY_FOR]->(primary:Artwork)
+
     WITH w,
       collect(DISTINCT t.name)  AS techniques,
       collect(DISTINCT p.name)  AS periods,
+      collect(DISTINCT CASE WHEN study IS NOT NULL THEN {
+        artworkId:    study.artworkId,
+        title:        study.title,
+        dateText:     study.dateText,
+        medium:       study.medium,
+        thumbnailUrl: study.thumbnailUrl,
+        imageUrl:     study.imageUrl
+      } ELSE null END) AS studiesRaw,
+      CASE WHEN primary IS NOT NULL THEN {
+        artworkId:    primary.artworkId,
+        title:        primary.title,
+        dateText:     primary.dateText,
+        medium:       primary.medium,
+        thumbnailUrl: primary.thumbnailUrl,
+        imageUrl:     primary.imageUrl
+      } ELSE null END AS primaryWork,
       collect(DISTINCT CASE WHEN ex IS NOT NULL THEN {
         exhibitionId:    ex.exhibitionId,
         title:           ex.title,
@@ -97,7 +119,9 @@ export async function onRequestGet({ request, env }) {
       techniques,
       periods,
       [e IN exhibitionsRaw WHERE e IS NOT NULL]  AS exhibitions,
-      [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership
+      [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership,
+      [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
+      primaryWork
   `;
 
   let raw;
