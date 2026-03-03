@@ -185,24 +185,40 @@ export async function onRequestGet({ request, env }) {
     let periods;
     let source;
 
-    if (dbPeriods.length > 0) {
-      // Neo4j has Period nodes — use them, enriching yearFrom/yearTo if absent
-      source  = "neo4j";
-      periods = dbPeriods.map(p => ({
-        ...p,
-        yearFrom: p.yearFrom ?? Math.min(...(p.artworks || []).map(w => w.yearFrom).filter(Boolean), 9999),
-        yearTo:   p.yearTo   ?? Math.max(...(p.artworks || []).map(w => w.yearFrom).filter(Boolean), 0),
-      }));
-    } else {
-      // No Period nodes yet — use canonical definitions, populate artworks by year range
-      source  = "fallback+artworks";
-      periods = CANONICAL_PERIODS.map(p => ({
-        ...p,
-        artworks: allArtworks.filter(w =>
-          w.yearFrom >= p.yearFrom && w.yearFrom <= p.yearTo
-        ),
-      }));
-    }
+if (dbPeriods.length > 0) {
+  // Neo4j has Period nodes — use them, but also catch artworks not linked
+  // via CREATED_IN by slotting them into periods by year range.
+  source = "neo4j";
+
+  // Set of artworkIds already assigned to a period via relationship
+  const linked = new Set(
+    dbPeriods.flatMap(p => (p.artworks || []).map(w => w.artworkId))
+  );
+
+  // Artworks with no CREATED_IN relationship — assign by year range
+  const unlinked = allArtworks.filter(w => !linked.has(w.artworkId));
+
+  periods = dbPeriods.map(p => {
+    const extra = unlinked.filter(w =>
+      w.yearFrom >= (p.yearFrom ?? 0) && w.yearFrom <= (p.yearTo ?? 9999)
+    );
+    return {
+      ...p,
+      yearFrom: p.yearFrom ?? Math.min(...(p.artworks || []).map(w => w.yearFrom).filter(Boolean), 9999),
+      yearTo:   p.yearTo   ?? Math.max(...(p.artworks || []).map(w => w.yearFrom).filter(Boolean), 0),
+      artworks: [...(p.artworks || []), ...extra],
+    };
+  });
+} else {
+  // No Period nodes yet — use canonical definitions, populate artworks by year range
+  source  = "fallback+artworks";
+  periods = CANONICAL_PERIODS.map(p => ({
+    ...p,
+    artworks: allArtworks.filter(w =>
+      w.yearFrom >= p.yearFrom && w.yearFrom <= p.yearTo
+    ),
+  }));
+}
 
     return new Response(
       JSON.stringify({ periods, exhibitions, lifeEvents, source }),

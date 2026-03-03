@@ -546,7 +546,7 @@ export default function ArtworkFactSheet() {
                 </div>
 
                 {/* ── Related works — studies and primary work ── */}
-                {((w.studies && w.studies.length > 0) || w.primaryWork) && (
+                {((w.studies && w.studies.length > 0) || w.primaryWork || (w.versions && w.versions.length > 0)) && (
                   <div className="aw-related">
                     <div className="aw-related-label">Related works</div>
                     <div className="aw-related-grid">
@@ -584,6 +584,24 @@ export default function ArtworkFactSheet() {
                               {study.medium && <span> · {study.medium}</span>}
                             </div>
                           </div>
+                        </Link>
+                      ))}
+                      {w.versions && w.versions.map((version, i) => (
+                        <Link key={i} to={`/works/${version.artworkId}`} className="aw-related-card">
+                          {version.thumbnailUrl || version.imageUrl
+                            ? <img className="aw-related-thumb"
+                                src={version.thumbnailUrl || version.imageUrl}
+                                alt={version.title} />
+                            : <div className="aw-related-thumb-ph">◎</div>
+                           }
+                           <div className="aw-related-info">
+                             <div className="aw-related-rel">Version</div>
+                             <div className="aw-related-title">{version.title}</div>
+                             <div className="aw-related-meta">
+                               {version.dateText && <span>{version.dateText}</span>}
+                               {version.medium && <span> · {version.medium}</span>}
+                             </div>
+                           </div>
                         </Link>
                       ))}
                     </div>

@@ -58,6 +58,9 @@ export async function onRequestGet({ request, env }) {
     // Primary work this is a study for (w is the study)
     OPTIONAL MATCH (w)-[:STUDY_FOR]->(primary:Artwork)
 
+    // Related versions (peer works, bidirectional)
+    OPTIONAL MATCH (w)-[:RELATED_VERSION]->(version:Artwork)
+
     WITH w,
       collect(DISTINCT t.name)  AS techniques,
       collect(DISTINCT p.name)  AS periods,
@@ -89,6 +92,14 @@ export async function onRequestGet({ request, env }) {
         sold:            exr.sold,
         catalogueNotes:  exr.catalogueNotes
       } ELSE null END) AS exhibitionsRaw,
+      collect(DISTINCT CASE WHEN version IS NOT NULL THEN {
+        artworkId:    version.artworkId,
+        title:        version.title,
+        dateText:     version.dateText,
+        medium:       version.medium,
+        thumbnailUrl: version.thumbnailUrl,
+        imageUrl:     version.imageUrl
+      } ELSE null END) AS versionsRaw,
       collect(DISTINCT CASE WHEN o IS NOT NULL THEN {
         ownerName:     o.name,
         ownerType:     o.type,
@@ -101,8 +112,7 @@ export async function onRequestGet({ request, env }) {
         source:        op.source,
         notes:         op.notes
       } ELSE null END) AS ownershipRaw
-
-    RETURN
+RETURN
       w.artworkId        AS artworkId,
       w.title            AS title,
       w.dateText         AS dateText,
@@ -120,7 +130,8 @@ export async function onRequestGet({ request, env }) {
       periods,
       [e IN exhibitionsRaw WHERE e IS NOT NULL]  AS exhibitions,
       [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership,
-      [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
+      [s IN studiesRaw    WHERE s IS NOT NULL]   AS studies,
+      [v IN versionsRaw   WHERE v IS NOT NULL]   AS versions,
       primaryWork
   `;
 
