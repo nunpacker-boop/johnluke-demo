@@ -361,10 +361,22 @@ export default function SelectedCatalogueTimeline() {
           letter-spacing: 0.1em; text-transform: uppercase; font-family: Georgia, serif;
         }
         .tl-year-display {
+          position: relative; min-width: 80px; text-align: right;
+        }
+        .tl-year-select {
+          appearance: none; -webkit-appearance: none;
+          background: transparent; border: none; outline: none;
           color: rgba(255,255,255,0.9); font-size: 2.2rem;
           font-family: Georgia, serif; font-weight: 400;
-          letter-spacing: 0.05em; min-width: 80px; text-align: right;
+          letter-spacing: 0.05em; text-align: right;
           text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+          cursor: pointer; padding-right: 4px;
+          text-align-last: right;
+        }
+        .tl-year-select:hover { color: white; }
+        .tl-year-select option {
+          background: #1a1a2e; color: white;
+          font-size: 1rem; font-family: Georgia, serif;
         }
 
         /* ── Progress bar ── */
@@ -777,7 +789,17 @@ export default function SelectedCatalogueTimeline() {
               <Link to="/works" className="tl-back">← Works</Link>
               <div className="tl-title">Selected Catalogue</div>
             </div>
-            <div className="tl-year-display">{currentYear}</div>
+            <div className="tl-year-display">
+              <select
+                className="tl-year-select"
+                value={currentYear}
+                onChange={e => scrollTo(yearToX(Number(e.target.value)) - viewportW / 2)}
+              >
+                {Array.from({ length: END_YEAR - START_YEAR + 1 }, (_, i) => START_YEAR + i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Viewport needle */}
