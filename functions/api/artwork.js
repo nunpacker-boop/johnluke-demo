@@ -112,8 +112,7 @@ export async function onRequestGet({ request, env }) {
         source:        op.source,
         notes:         op.notes
       } ELSE null END) AS ownershipRaw
-
-    RETURN
+RETURN
       w.artworkId        AS artworkId,
       w.title            AS title,
       w.dateText         AS dateText,
@@ -131,9 +130,9 @@ export async function onRequestGet({ request, env }) {
       periods,
       [e IN exhibitionsRaw WHERE e IS NOT NULL]  AS exhibitions,
       [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership,
-      [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
+      [s IN studiesRaw    WHERE s IS NOT NULL]   AS studies,
+      [v IN versionsRaw   WHERE v IS NOT NULL]   AS versions,
       primaryWork
-      [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
   `;
 
   let raw;
