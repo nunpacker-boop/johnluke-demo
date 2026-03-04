@@ -910,8 +910,7 @@ export default function SelectedCatalogueTimeline() {
 
         /* ── Filter panel ── */
         .tl-filter-btn {
-          position: absolute; left: 20px; top: 50%;
-          transform: translateY(-50%);
+          position: absolute; left: 20px;
           width: 36px; height: 36px;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 50%;
@@ -919,7 +918,7 @@ export default function SelectedCatalogueTimeline() {
           color: rgba(255,255,255,0.7);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; font-size: 0.85rem;
-          transition: all 0.2s; z-index: 200;
+          transition: all 0.2s; z-index: 300;
           backdrop-filter: blur(4px);
         }
         .tl-filter-btn:hover { background: rgba(0,0,0,0.5); color: white;
@@ -928,13 +927,13 @@ export default function SelectedCatalogueTimeline() {
           border-color: rgba(255,255,255,0.5); color: white; }
 
         .tl-filter-panel {
-          position: absolute; left: 64px; top: 50%;
+          position: absolute; left: 64px; top: 80px;
           transform: translateY(-50%);
           background: rgba(8,12,20,0.92);
           border: 1px solid rgba(255,255,255,0.12);
           border-radius: 10px;
           padding: 16px 18px;
-          z-index: 200;
+          z-index: 300;
           min-width: 180px;
           backdrop-filter: blur(12px);
           box-shadow: 0 8px 32px rgba(0,0,0,0.5);
@@ -987,15 +986,15 @@ export default function SelectedCatalogueTimeline() {
           color: rgba(255,255,255,0.7);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; font-size: 0.75rem;
-          transition: all 0.2s; z-index: 200;
+          transition: all 0.2s; z-index: 300;
           backdrop-filter: blur(4px);
         }
         .tl-theme-btn:hover { background: rgba(0,0,0,0.5); color: white;
           border-color: rgba(255,255,255,0.4); }
         .tl-theme-btn.open { background: rgba(255,255,255,0.15);
           border-color: rgba(255,255,255,0.5); color: white; }
-        .tl-theme-panel { top: 50% !important;
-          transform: translateY(calc(-50% + 44px)) !important; }
+        .tl-theme-panel { top: 128px !important;
+          transform: translateY(-50%) !important; }
 
         /* ── Medium colour dot on artwork card ── */
         .tl-medium-dot {
@@ -1081,7 +1080,7 @@ export default function SelectedCatalogueTimeline() {
           {/* Filter toggle button — sits in left margin, vertically centred */}
           <button
             className={`tl-filter-btn${filterOpen ? " open" : ""}`}
-            style={{ top: 32 }}
+            style={{ top: 80 }}
             onClick={() => setFilterOpen(o => !o)}
             title="Filter by medium"
           >
@@ -1098,7 +1097,7 @@ export default function SelectedCatalogueTimeline() {
           {/* Theme filter button — sits below medium filter button */}
           <button
             className={`tl-theme-btn${themeOpen ? " open" : ""}`}
-            style={{ top: 80 }}
+            style={{ top: 128 }}
             onClick={() => setThemeOpen(o => !o)}
             title="Filter by theme"
           >
