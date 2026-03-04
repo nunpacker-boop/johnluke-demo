@@ -221,7 +221,6 @@ export async function onRequestGet({ request, env }) {
         ),
       }));
     }
-    }
 
     return new Response(
       JSON.stringify({ periods, exhibitions, lifeEvents, source }),
