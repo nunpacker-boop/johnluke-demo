@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PX_PER_YEAR     = 800;   // horizontal scale
+const PX_PER_YEAR     = 1200;  // horizontal scale — wider for breathing room
 const START_YEAR      = 1920;
 const END_YEAR        = 1975;
 const CANVAS_PADDING  = 600;   // breathing room left and right
@@ -32,43 +32,43 @@ function xToYear(x) {
   return START_YEAR + (x - CANVAS_PADDING) / PX_PER_YEAR;
 }
 
-// Force-directed layout: spread cards to avoid overlap, tethered to year x
-// Returns array of {artworkId, x, y} for a set of works in one band
+// Force-directed layout: spread cards to avoid overlap, grouped by year
+// Works within the same year are spread as a cluster around their year centre.
+// Returns map of { artworkId -> {x, y} }
 const CARD_W = 220;
 const CARD_H = 160;
-const MIN_GAP = 20;      // minimum horizontal gap between cards
-const TETHER  = 0.25;    // spring strength pulling card back to natural x
-const ITERATIONS = 60;   // collision resolution passes
+const CARD_GAP = 28;     // horizontal gap between cards
 
 function computeLayout(works, band) {
   if (!works.length) return {};
   const bandH = band.bottom - band.top - CARD_H;
-  // Y rows — stagger vertically within band
-  const yRows = [0, 0.6, 0.3, 0.9, 0.15, 0.75];
-  // Natural x from year
-  const nodes = works.map((w, i) => ({
-    id: w.artworkId,
-    natural: yearToX(w.yearFrom || 1940),
-    x: yearToX(w.yearFrom || 1940),
-    y: band.top + yRows[i % yRows.length] * bandH,
-  }));
-  // Iterative collision push
-  for (let iter = 0; iter < ITERATIONS; iter++) {
-    // Sort by x each pass so we push in correct direction
-    nodes.sort((a, b) => a.x - b.x);
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const a = nodes[i], b = nodes[i + 1];
-      const overlap = (CARD_W + MIN_GAP) - (b.x - a.x);
-      if (overlap > 0) {
-        a.x -= overlap * 0.5;
-        b.x += overlap * 0.5;
-      }
-    }
-    // Spring: pull each card back toward its natural x
-    nodes.forEach(n => { n.x += (n.natural - n.x) * TETHER; });
-  }
+  // Y stagger rows within band (normalised 0–1)
+  const yRows = [0.05, 0.65, 0.35, 0.85, 0.18, 0.78, 0.5, 0.0, 0.92];
+
+  // Group works by year
+  const byYear = {};
+  works.forEach((w, i) => {
+    const yr = w.yearFrom || 1940;
+    if (!byYear[yr]) byYear[yr] = [];
+    byYear[yr].push({ w, globalIdx: i });
+  });
+
   const map = {};
-  nodes.forEach(n => { map[n.id] = { x: n.x, y: n.y }; });
+
+  Object.entries(byYear).forEach(([yrStr, group]) => {
+    const yr = Number(yrStr);
+    const centreX = yearToX(yr);
+    const n = group.length;
+    const totalW = n * CARD_W + (n - 1) * CARD_GAP;
+    const startX = centreX - totalW / 2;
+
+    group.forEach(({ w, globalIdx }, slotIdx) => {
+      const x = startX + slotIdx * (CARD_W + CARD_GAP);
+      const y = band.top + yRows[globalIdx % yRows.length] * bandH;
+      map[w.artworkId] = { x, y };
+    });
+  });
+
   return map;
 }
 
