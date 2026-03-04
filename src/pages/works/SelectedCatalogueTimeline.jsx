@@ -258,7 +258,7 @@ function ThemePanel({ activeThemes, onChange }) {
   };
 
   return (
-    <div className="tl-filter-panel tl-theme-panel">
+    <div className="tl-filter-panel">
       <div className="tl-filter-heading">Filter by theme</div>
       {THEME_GROUPS.map(g => {
         const on = activeThemes.has(g.id);
@@ -908,27 +908,36 @@ export default function SelectedCatalogueTimeline() {
           100% { width:0; left:100%; }
         }
 
-        /* ── Filter panel ── */
-        .tl-filter-btn {
-          position: absolute; left: 20px;
-          width: 36px; height: 36px;
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 50%;
-          background: rgba(0,0,0,0.3);
-          color: rgba(255,255,255,0.7);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 0.85rem;
-          transition: all 0.2s; z-index: 300;
-          backdrop-filter: blur(4px);
+        /* ── Filter controls in topbar ── */
+        .tl-topbar-filters {
+          display: flex; align-items: center; gap: 8px;
+          position: absolute; left: 50%; transform: translateX(-50%);
         }
-        .tl-filter-btn:hover { background: rgba(0,0,0,0.5); color: white;
-          border-color: rgba(255,255,255,0.4); }
-        .tl-filter-btn.open { background: rgba(255,255,255,0.15);
-          border-color: rgba(255,255,255,0.5); color: white; }
+        .tl-filter-wrap { position: relative; }
+        .tl-filter-pill {
+          height: 30px; padding: 0 14px;
+          border: 1px solid rgba(255,255,255,0.18);
+          border-radius: 15px;
+          background: rgba(0,0,0,0.25);
+          color: rgba(255,255,255,0.55); font-size: 0.75rem;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          cursor: pointer; transition: all 0.2s;
+          font-family: Georgia, serif;
+          backdrop-filter: blur(4px);
+          white-space: nowrap;
+        }
+        .tl-filter-pill:hover { color: rgba(255,255,255,0.9);
+          border-color: rgba(255,255,255,0.4);
+          background: rgba(0,0,0,0.4); }
+        .tl-filter-pill.open { color: white;
+          border-color: rgba(255,255,255,0.5);
+          background: rgba(255,255,255,0.12); }
+        .tl-filter-pill.active { color: rgba(255,220,120,0.9);
+          border-color: rgba(255,220,120,0.4); }
 
         .tl-filter-panel {
-          position: absolute; left: 64px; top: 80px;
-          transform: translateY(-50%);
+          position: absolute; left: 0; top: calc(100% + 10px);
+          transform: none;
           background: rgba(8,12,20,0.92);
           border: 1px solid rgba(255,255,255,0.12);
           border-radius: 10px;
@@ -939,8 +948,8 @@ export default function SelectedCatalogueTimeline() {
           box-shadow: 0 8px 32px rgba(0,0,0,0.5);
           animation: tlFadeIn 0.15s ease;
         }
-        @keyframes tlFadeIn { from { opacity:0; transform:translateY(-50%) translateX(-6px); }
-                              to   { opacity:1; transform:translateY(-50%) translateX(0); } }
+        @keyframes tlFadeIn { from { opacity:0; transform:translateY(-4px); }
+                              to   { opacity:1; transform:translateY(0); } }
         .tl-filter-heading {
           font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
           color: rgba(255,255,255,0.35); margin-bottom: 12px;
@@ -976,25 +985,7 @@ export default function SelectedCatalogueTimeline() {
         }
         .tl-filter-all:hover { color: rgba(255,255,255,0.7); }
 
-        /* ── Theme panel — positioned below medium panel button ── */
-        .tl-theme-btn {
-          position: absolute; left: 20px;
-          width: 36px; height: 36px;
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 50%;
-          background: rgba(0,0,0,0.3);
-          color: rgba(255,255,255,0.7);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 0.75rem;
-          transition: all 0.2s; z-index: 300;
-          backdrop-filter: blur(4px);
-        }
-        .tl-theme-btn:hover { background: rgba(0,0,0,0.5); color: white;
-          border-color: rgba(255,255,255,0.4); }
-        .tl-theme-btn.open { background: rgba(255,255,255,0.15);
-          border-color: rgba(255,255,255,0.5); color: white; }
-        .tl-theme-panel { top: 128px !important;
-          transform: translateY(-50%) !important; }
+        /* theme panel uses same .tl-filter-panel styles */
 
         /* ── Medium colour dot on artwork card ── */
         .tl-medium-dot {
@@ -1077,45 +1068,46 @@ export default function SelectedCatalogueTimeline() {
       {/* Timeline */}
       {!loading && !error && data && (
         <>
-          {/* Filter toggle button — sits in left margin, vertically centred */}
-          <button
-            className={`tl-filter-btn${filterOpen ? " open" : ""}`}
-            style={{ top: 80 }}
-            onClick={() => setFilterOpen(o => !o)}
-            title="Filter by medium"
-          >
-            ⊟
-          </button>
-          {filterOpen && (
-            <FilterPanel
-              activeFilters={activeFilters}
-              onChange={setActiveFilters}
-              onClose={() => setFilterOpen(false)}
-            />
-          )}
-
-          {/* Theme filter button — sits below medium filter button */}
-          <button
-            className={`tl-theme-btn${themeOpen ? " open" : ""}`}
-            style={{ top: 128 }}
-            onClick={() => setThemeOpen(o => !o)}
-            title="Filter by theme"
-          >
-            ◈
-          </button>
-          {themeOpen && (
-            <ThemePanel
-              activeThemes={activeThemes}
-              onChange={setActiveThemes}
-            />
-          )}
-
           {/* Top bar */}
           <div className="tl-topbar">
             <div className="tl-topbar-left">
               <Link to="/works" className="tl-back">← Works</Link>
               <div className="tl-title">Selected Catalogue</div>
             </div>
+
+            {/* Filter controls — centre of topbar */}
+            <div className="tl-topbar-filters">
+              <div className="tl-filter-wrap">
+                <button
+                  className={`tl-filter-pill${filterOpen ? " open" : ""}${activeFilters.size < MEDIUM_GROUPS.length ? " active" : ""}`}
+                  onClick={() => { setFilterOpen(o => !o); setThemeOpen(false); }}
+                >
+                  Medium{activeFilters.size < MEDIUM_GROUPS.length ? ` · ${activeFilters.size}` : ""}
+                </button>
+                {filterOpen && (
+                  <FilterPanel
+                    activeFilters={activeFilters}
+                    onChange={setActiveFilters}
+                    onClose={() => setFilterOpen(false)}
+                  />
+                )}
+              </div>
+              <div className="tl-filter-wrap">
+                <button
+                  className={`tl-filter-pill${themeOpen ? " open" : ""}${activeThemes.size < THEME_GROUPS.length ? " active" : ""}`}
+                  onClick={() => { setThemeOpen(o => !o); setFilterOpen(false); }}
+                >
+                  Theme{activeThemes.size < THEME_GROUPS.length ? ` · ${activeThemes.size}` : ""}
+                </button>
+                {themeOpen && (
+                  <ThemePanel
+                    activeThemes={activeThemes}
+                    onChange={setActiveThemes}
+                  />
+                )}
+              </div>
+            </div>
+
             <div className="tl-year-display">
               <select
                 className="tl-year-select"
