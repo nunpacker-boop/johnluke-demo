@@ -18,6 +18,7 @@ import Works from "./pages/works/index.jsx";
 import SelectedCatalogueTimeline from "./pages/works/SelectedCatalogueTimeline.jsx";
 import LivingCatalogue from "./pages/works/LivingCatalogue.jsx";
 import Browse from "./pages/works/Browse.jsx";
+import CatalogueTerms from "./pages/works/CatalogueTerms.jsx";
 import ArtworkFactSheet from "./pages/works/ArtworkFactSheet.jsx";
 
 // Archive
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/works" element={<Works />} />
           <Route path="/works/living-catalogue" element={<LivingCatalogue />} />
           <Route path="/works/browse" element={<Browse />} />
+          <Route path="/works/catalogue-terms" element={<CatalogueTerms />} />
           <Route path="/works/:artworkId" element={<ArtworkFactSheet />} />
 
           {/* Archive */}

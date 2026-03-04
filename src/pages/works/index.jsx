@@ -3,6 +3,7 @@ const cards = [
   { label: "~50 key works", title: "Selected Catalogue", body: "A curated selection of John Luke's most significant works, presented with deep scholarly commentary, technique notes, and full provenance.", to: "/works/selected-catalogue" },
   { label: "215 works & growing", title: "Living Catalogue Raisonné", body: "A continuously evolving catalogue documenting every known, attributed, lost, or rediscovered work — evidence-based and non-final.", to: "/works/living-catalogue" },
   { label: "Search & filter", title: "Browse & Search", body: "Browse the full catalogue by period, medium, theme, location, exhibition, or technique. Search by title or raisonné number.", to: "/works/browse" },
+  { label: "Reference", title: "Catalogue Terms & Definitions", body: "A glossary explaining the terminology, medium classifications, support types, dating conventions, and provenance vocabulary used throughout the catalogue.", to: "/works/catalogue-terms" },
 ];
 export default function Works() {
   return (
@@ -17,6 +18,7 @@ export default function Works() {
               <Link to="/works/selected-catalogue">Selected Catalogue</Link>
               <Link to="/works/living-catalogue">Living Catalogue Raisonné</Link>
               <Link to="/works/browse">Browse & Search</Link>
+              <Link to="/works/catalogue-terms">Terms & Definitions</Link>
             </div>
           </div>
           <img className="panel-media" src="/images/john-luke-the-old-callan-bridge-1945.jpg" alt="John Luke — The Old Callan Bridge, 1945" loading="lazy" />
