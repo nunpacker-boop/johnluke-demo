@@ -65,6 +65,18 @@ const MEDIUM_GROUPS = [
   },
 ];
 
+// ── Theme filter groups ───────────────────────────────────────────────────────
+const THEME_GROUPS = [
+  { id: "Landscape",  label: "Landscape",  color: "#7aab6e" },
+  { id: "Figure",     label: "Figure",     color: "#d4956a" },
+  { id: "Portrait",   label: "Portrait",   color: "#c4a0c8" },
+  { id: "Still Life", label: "Still Life", color: "#e8c97a" },
+  { id: "Animal",     label: "Animal",     color: "#8bbcb0" },
+  { id: "Religious",  label: "Religious",  color: "#b8a898" },
+  { id: "Cityscape",  label: "Cityscape",  color: "#7a9ec4" },
+  { id: "Decorative", label: "Decorative", color: "#c4b87a" },
+];
+
 function mediumGroup(medium) {
   for (const g of MEDIUM_GROUPS) {
     if (g.mediums.includes(medium)) return g;
@@ -227,6 +239,46 @@ function FilterPanel({ activeFilters, onChange, onClose }) {
   );
 }
 
+// ── Theme filter panel ───────────────────────────────────────────────────────
+function ThemePanel({ activeThemes, onChange }) {
+  const allOn = activeThemes.size === THEME_GROUPS.length;
+
+  const toggle = (id) => {
+    const next = new Set(activeThemes);
+    if (next.has(id)) { if (next.size > 1) next.delete(id); }
+    else next.add(id);
+    onChange(next);
+  };
+
+  const toggleAll = () => {
+    onChange(allOn
+      ? new Set([THEME_GROUPS[0].id])
+      : new Set(THEME_GROUPS.map(g => g.id))
+    );
+  };
+
+  return (
+    <div className="tl-filter-panel tl-theme-panel">
+      <div className="tl-filter-heading">Filter by theme</div>
+      {THEME_GROUPS.map(g => {
+        const on = activeThemes.has(g.id);
+        return (
+          <div key={g.id} className="tl-filter-row" onClick={() => toggle(g.id)}>
+            <div className={`tl-filter-swatch${on ? "" : " off"}`}
+                 style={{ background: g.color }} />
+            <span className={`tl-filter-label${on ? "" : " off"}`}>{g.label}</span>
+            <span className="tl-filter-check">{on ? "✓" : ""}</span>
+          </div>
+        );
+      })}
+      <hr className="tl-filter-divider" />
+      <div className="tl-filter-all" onClick={toggleAll}>
+        {allOn ? "Hide all" : "Show all"}
+      </div>
+    </div>
+  );
+}
+
 // ── Life event marker — major John Luke events below axis ────────────────────
 function LifeEventMarker({ event, scrollX, viewportW }) {
   const x = yearToX(event.year);
@@ -325,7 +377,11 @@ export default function SelectedCatalogueTimeline() {
   const [activeFilters, setActiveFilters] = useState(
     new Set(MEDIUM_GROUPS.map(g => g.id))
   );
+  const [activeThemes, setActiveThemes] = useState(
+    new Set(THEME_GROUPS.map(g => g.id))
+  );
   const [filterOpen, setFilterOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [viewportW, setViewportW]   = useState(1200);
   const [isDragging, setIsDragging] = useState(false);
   const [bgStyle, setBgStyle]       = useState({});
@@ -921,6 +977,26 @@ export default function SelectedCatalogueTimeline() {
         }
         .tl-filter-all:hover { color: rgba(255,255,255,0.7); }
 
+        /* ── Theme panel — positioned below medium panel button ── */
+        .tl-theme-btn {
+          position: absolute; left: 20px;
+          width: 36px; height: 36px;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 50%;
+          background: rgba(0,0,0,0.3);
+          color: rgba(255,255,255,0.7);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 0.75rem;
+          transition: all 0.2s; z-index: 200;
+          backdrop-filter: blur(4px);
+        }
+        .tl-theme-btn:hover { background: rgba(0,0,0,0.5); color: white;
+          border-color: rgba(255,255,255,0.4); }
+        .tl-theme-btn.open { background: rgba(255,255,255,0.15);
+          border-color: rgba(255,255,255,0.5); color: white; }
+        .tl-theme-panel { top: 50% !important;
+          transform: translateY(calc(-50% + 44px)) !important; }
+
         /* ── Medium colour dot on artwork card ── */
         .tl-medium-dot {
           width: 7px; height: 7px; border-radius: 50%;
@@ -955,10 +1031,11 @@ export default function SelectedCatalogueTimeline() {
   const primaryLayout = computeLayout(primaryArtworks, PRIMARY_BAND);
   const studyLayout   = computeLayout(studyArtworks,   STUDY_BAND);
 
-  // Filter artworks by active medium groups
+  // Filter artworks by active medium groups AND theme
   const filterWork = (w) => {
     const g = mediumGroup(w.medium);
-    return activeFilters.has(g.id);
+    const themeMatch = !w.theme || activeThemes.has(w.theme);
+    return activeFilters.has(g.id) && themeMatch;
   };
   const visiblePrimary = primaryArtworks.filter(filterWork);
   const visibleStudy   = studyArtworks.filter(filterWork);
@@ -1015,6 +1092,22 @@ export default function SelectedCatalogueTimeline() {
               activeFilters={activeFilters}
               onChange={setActiveFilters}
               onClose={() => setFilterOpen(false)}
+            />
+          )}
+
+          {/* Theme filter button — sits below medium filter button */}
+          <button
+            className={`tl-theme-btn${themeOpen ? " open" : ""}`}
+            style={{ top: 80 }}
+            onClick={() => setThemeOpen(o => !o)}
+            title="Filter by theme"
+          >
+            ◈
+          </button>
+          {themeOpen && (
+            <ThemePanel
+              activeThemes={activeThemes}
+              onChange={setActiveThemes}
             />
           )}
 
