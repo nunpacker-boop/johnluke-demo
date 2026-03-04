@@ -133,7 +133,11 @@ export async function onRequestGet({ request, env }) {
       [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership,
       [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
       [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
-      primaryWork
+      primaryWork,
+      coalesce(w.timelineVisible, true)          AS timelineVisible,
+      coalesce(w.isStudy, false)                 AS isStudy,
+      coalesce(w.selectedCatalogue, false)       AS selectedCatalogue,
+      w.theme                                    AS theme
   `;
 
   let raw;
