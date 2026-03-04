@@ -32,24 +32,49 @@ function xToYear(x) {
   return START_YEAR + (x - CANVAS_PADDING) / PX_PER_YEAR;
 }
 
-// Y position for artwork — uses correct band based on isStudy flag
-function artworkY(yearIndex, isStudy) {
-  const band = isStudy ? STUDY_BAND : PRIMARY_BAND;
-  const rows = [0, 80, 40, 120, 20, 100];   // stagger within band
-  const bandHeight = band.bottom - band.top - 160; // leave room for card
-  return band.top + (rows[yearIndex % rows.length] / 120) * bandHeight;
+// Force-directed layout: spread cards to avoid overlap, tethered to year x
+// Returns array of {artworkId, x, y} for a set of works in one band
+const CARD_W = 220;
+const CARD_H = 160;
+const MIN_GAP = 20;      // minimum horizontal gap between cards
+const TETHER  = 0.25;    // spring strength pulling card back to natural x
+const ITERATIONS = 60;   // collision resolution passes
+
+function computeLayout(works, band) {
+  if (!works.length) return {};
+  const bandH = band.bottom - band.top - CARD_H;
+  // Y rows — stagger vertically within band
+  const yRows = [0, 0.6, 0.3, 0.9, 0.15, 0.75];
+  // Natural x from year
+  const nodes = works.map((w, i) => ({
+    id: w.artworkId,
+    natural: yearToX(w.yearFrom || 1940),
+    x: yearToX(w.yearFrom || 1940),
+    y: band.top + yRows[i % yRows.length] * bandH,
+  }));
+  // Iterative collision push
+  for (let iter = 0; iter < ITERATIONS; iter++) {
+    // Sort by x each pass so we push in correct direction
+    nodes.sort((a, b) => a.x - b.x);
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const a = nodes[i], b = nodes[i + 1];
+      const overlap = (CARD_W + MIN_GAP) - (b.x - a.x);
+      if (overlap > 0) {
+        a.x -= overlap * 0.5;
+        b.x += overlap * 0.5;
+      }
+    }
+    // Spring: pull each card back toward its natural x
+    nodes.forEach(n => { n.x += (n.natural - n.x) * TETHER; });
+  }
+  const map = {};
+  nodes.forEach(n => { map[n.id] = { x: n.x, y: n.y }; });
+  return map;
 }
 
 // ── Artwork card on canvas ────────────────────────────────────────────────────
-function ArtworkMarker({ work, index, yearIndex, scrollX, viewportW, onClick }) {
+function ArtworkMarker({ work, x, y, scrollX, viewportW, onClick }) {
   const isStudy = !!work.isStudy;
-  // Spread same-year artworks within their band symmetrically
-  const CARD_SLOT = 280;  // card width (220) + gap (60)
-  const side = yearIndex % 2 === 0 ? 1 : -1;
-  const spreadDist = Math.ceil(yearIndex / 2);
-  const offset = side * spreadDist * CARD_SLOT;
-  const x = yearToX(work.yearFrom || 1940) + offset;
-  const y = artworkY(yearIndex, isStudy);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -367,16 +392,18 @@ export default function SelectedCatalogueTimeline() {
           appearance: none; -webkit-appearance: none;
           background: transparent; border: none; outline: none;
           color: rgba(255,255,255,0.9); font-size: 2.2rem;
-          font-family: Georgia, serif; font-weight: 400;
+          font-family: var(--ff-hx, Georgia, serif); font-weight: 400;
           letter-spacing: 0.05em; text-align: right;
           text-shadow: 0 2px 12px rgba(0,0,0,0.4);
           cursor: pointer; padding-right: 4px;
           text-align-last: right;
+          font-style: italic;
         }
         .tl-year-select:hover { color: white; }
         .tl-year-select option {
           background: #1a1a2e; color: white;
-          font-size: 1rem; font-family: Georgia, serif;
+          font-size: 1rem; font-family: var(--ff-hx, Georgia, serif);
+          font-style: normal;
         }
 
         /* ── Progress bar ── */
@@ -741,9 +768,13 @@ export default function SelectedCatalogueTimeline() {
     .filter(w => w.yearFrom)
     .sort((a, b) => a.yearFrom - b.yearFrom);
 
-  // Split into primary and study bands — each gets its own yearIndex counter
+  // Split into primary and study bands
   const primaryArtworks = allArtworks.filter(w => !w.isStudy);
   const studyArtworks   = allArtworks.filter(w => !!w.isStudy);
+
+  // Compute force-directed layouts for each band
+  const primaryLayout = computeLayout(primaryArtworks, PRIMARY_BAND);
+  const studyLayout   = computeLayout(studyArtworks,   STUDY_BAND);
 
   const allExhibitions = (data?.exhibitions || [])
     .filter(ex => ex.yearFrom || ex.yearText);
@@ -852,46 +883,38 @@ export default function SelectedCatalogueTimeline() {
             </div>
 
             {/* Primary artwork markers */}
-            {(() => {
-              const yearCount = {};
-              return primaryArtworks.map((work, i) => {
-                const yr = work.yearFrom;
-                const yIdx = yearCount[yr] ?? 0;
-                yearCount[yr] = yIdx + 1;
-                return (
-                  <ArtworkMarker
-                    key={work.artworkId || i}
-                    work={work}
-                    index={i}
-                    yearIndex={yIdx}
-                    scrollX={scrollX}
-                    viewportW={viewportW}
-                    onClick={handleArtworkClick}
-                  />
-                );
-              });
-            })()}
+            {primaryArtworks.map((work, i) => {
+              const pos = primaryLayout[work.artworkId];
+              if (!pos) return null;
+              return (
+                <ArtworkMarker
+                  key={work.artworkId || i}
+                  work={work}
+                  x={pos.x}
+                  y={pos.y}
+                  scrollX={scrollX}
+                  viewportW={viewportW}
+                  onClick={handleArtworkClick}
+                />
+              );
+            })}
 
             {/* Study / secondary artwork markers */}
-            {(() => {
-              const yearCount = {};
-              return studyArtworks.map((work, i) => {
-                const yr = work.yearFrom;
-                const yIdx = yearCount[yr] ?? 0;
-                yearCount[yr] = yIdx + 1;
-                return (
-                  <ArtworkMarker
-                    key={work.artworkId || i}
-                    work={work}
-                    index={i}
-                    yearIndex={yIdx}
-                    scrollX={scrollX}
-                    viewportW={viewportW}
-                    onClick={handleArtworkClick}
-                  />
-                );
-              });
-            })()}
+            {studyArtworks.map((work, i) => {
+              const pos = studyLayout[work.artworkId];
+              if (!pos) return null;
+              return (
+                <ArtworkMarker
+                  key={work.artworkId || i}
+                  work={work}
+                  x={pos.x}
+                  y={pos.y}
+                  scrollX={scrollX}
+                  viewportW={viewportW}
+                  onClick={handleArtworkClick}
+                />
+              );
+            })}
           </div>
 
           {/* Instructions */}
