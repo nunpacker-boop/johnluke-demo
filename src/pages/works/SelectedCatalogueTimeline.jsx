@@ -199,6 +199,74 @@ function ArtworkMarker({ work, x, y, scrollX, viewportW, onClick }) {
   );
 }
 
+// ── Hidden artwork dot — timelineVisible=false works ─────────────────────────
+function HiddenArtworkDot({ work, x, y, scrollX, viewportW, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const group = THEME_GROUPS.find(g => g.id === work.theme) || { color: "#888888" };
+
+  const centreX = scrollX + viewportW / 2;
+  const dist    = Math.abs(x - centreX);
+  const opacity = Math.max(0, 1 - dist / (viewportW * 0.55));
+  if (opacity < 0.03) return null;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        transform: "translate(-50%, -50%)",
+        zIndex: hovered ? 50 : 10,
+        opacity,
+        cursor: "pointer",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => onClick(work)}
+    >
+      {/* The dot */}
+      <div style={{
+        width: hovered ? 14 : 9,
+        height: hovered ? 14 : 9,
+        borderRadius: "50%",
+        background: group.color,
+        border: hovered ? "2px solid rgba(255,255,255,0.8)" : "1px solid rgba(255,255,255,0.3)",
+        transition: "all 0.15s",
+        boxShadow: hovered ? `0 0 8px ${group.color}` : "none",
+      }} />
+      {/* Tooltip on hover */}
+      {hovered && (
+        <div style={{
+          position: "absolute",
+          bottom: "calc(100% + 8px)",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "rgba(8,12,20,0.95)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          borderRadius: 6,
+          padding: "6px 10px",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          backdropFilter: "blur(8px)",
+        }}>
+          <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.8rem",
+            fontFamily: "Georgia, serif", fontStyle: "italic", marginBottom: 2 }}>
+            {work.title}
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem",
+            letterSpacing: "0.05em" }}>
+            {work.yearFrom || "Undated"} · {work.theme || ""}
+          </div>
+          <div style={{ color: group.color, fontSize: "0.65rem",
+            marginTop: 3, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            View →
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Filter panel ─────────────────────────────────────────────────────────────
 function FilterPanel({ activeFilters, onChange, onClose }) {
   const allOn = activeFilters.size === MEDIUM_GROUPS.length;
@@ -1021,8 +1089,13 @@ export default function SelectedCatalogueTimeline() {
   const primaryLayout = computeLayout(primaryArtworks, PRIMARY_BAND);
   const studyLayout   = computeLayout(studyArtworks,   STUDY_BAND);
 
-  // Filter artworks by active medium groups AND theme
+  // timelineVisible=false works — always shown as dots regardless of filters
+  const hiddenPrimary = primaryArtworks.filter(w => w.timelineVisible === false);
+  const hiddenStudy   = studyArtworks.filter(w => w.timelineVisible === false);
+
+  // Filter artworks by active medium groups AND theme (only timelineVisible works)
   const filterWork = (w) => {
+    if (w.timelineVisible === false) return false;
     const g = mediumGroup(w.medium);
     const themeMatch = !w.theme || activeThemes.has(w.theme);
     return activeFilters.has(g.id) && themeMatch;
@@ -1169,6 +1242,38 @@ export default function SelectedCatalogueTimeline() {
             <div className="tl-band-label" style={{ top: STUDY_BAND.top + 2 }}>
               Studies
             </div>
+
+            {/* Hidden artworks (timelineVisible=false) — interactive theme dots */}
+            {hiddenPrimary.map((work, i) => {
+              const pos = primaryLayout[work.artworkId];
+              if (!pos) return null;
+              return (
+                <HiddenArtworkDot
+                  key={"hidden-" + (work.artworkId || i)}
+                  work={work}
+                  x={pos.x + CARD_W / 2}
+                  y={pos.y + CARD_H / 2}
+                  scrollX={scrollX}
+                  viewportW={viewportW}
+                  onClick={handleArtworkClick}
+                />
+              );
+            })}
+            {hiddenStudy.map((work, i) => {
+              const pos = studyLayout[work.artworkId];
+              if (!pos) return null;
+              return (
+                <HiddenArtworkDot
+                  key={"hidden-study-" + (work.artworkId || i)}
+                  work={work}
+                  x={pos.x + CARD_W / 2}
+                  y={pos.y + CARD_H / 2}
+                  scrollX={scrollX}
+                  viewportW={viewportW}
+                  onClick={handleArtworkClick}
+                />
+              );
+            })}
 
             {/* Primary artwork markers — full cards for visible, dots for filtered-out */}
             {primaryArtworks.map((work, i) => {

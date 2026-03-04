@@ -123,6 +123,40 @@ export default function ArtworkFactSheet() {
       .catch(e => { setError(e.message); setLoading(false); });
   }, [artworkId]);
 
+  // timelineVisible admin toggle
+  const [tlVisible, setTlVisible] = useState(null); // null = not yet loaded
+  const [tlSaving, setTlSaving]   = useState(false);
+  const [tlMsg, setTlMsg]         = useState(null);
+
+  useEffect(() => {
+    if (artwork) setTlVisible(artwork.timelineVisible !== false);
+  }, [artwork]);
+
+  const toggleTimelineVisible = async () => {
+    if (!artworkId || tlSaving) return;
+    const next = !tlVisible;
+    setTlSaving(true);
+    setTlMsg(null);
+    try {
+      const res = await fetch(`/api/artwork?id=${encodeURIComponent(artworkId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timelineVisible: next }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setTlVisible(next);
+        setTlMsg(next ? "Shown on timeline" : "Hidden from timeline");
+        setTimeout(() => setTlMsg(null), 2500);
+      } else {
+        setTlMsg("Save failed");
+      }
+    } catch {
+      setTlMsg("Save failed");
+    }
+    setTlSaving(false);
+  };
+
   const w = artwork;
   const image = w?.imageUrl || w?.thumbnailUrl;
   const id = w?.artworkId ? w.artworkId.replace("artwork-", "").toUpperCase() : null;
@@ -470,6 +504,41 @@ export default function ArtworkFactSheet() {
                           <><dt>Period</dt><dd>{w.periods.filter(Boolean).join(", ")}</dd></>
                         )}
                       </dl>
+
+                      {/* Timeline visibility toggle */}
+                      {tlVisible !== null && (
+                        <div style={{
+                          marginTop: 14, paddingTop: 14,
+                          borderTop: "1px solid var(--light)",
+                          display: "flex", alignItems: "center", gap: 10,
+                        }}>
+                          <button
+                            onClick={toggleTimelineVisible}
+                            disabled={tlSaving}
+                            title={tlVisible ? "Hide this work from the timeline" : "Show this work on the timeline"}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 7,
+                              background: "none", border: "1px solid var(--light)",
+                              borderRadius: 4, padding: "4px 10px",
+                              cursor: tlSaving ? "wait" : "pointer",
+                              fontSize: "0.72rem", letterSpacing: "0.04em",
+                              color: tlVisible ? "var(--text-muted)" : "rgba(180,100,100,0.9)",
+                              transition: "all 0.2s",
+                            }}
+                          >
+                            <span style={{ fontSize: "0.9rem" }}>
+                              {tlVisible ? "◉" : "◎"}
+                            </span>
+                            {tlSaving ? "Saving…" : tlVisible ? "On timeline" : "Hidden from timeline"}
+                          </button>
+                          {tlMsg && (
+                            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)",
+                              fontStyle: "italic" }}>
+                              {tlMsg}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {exhibitions.length > 0 && (
@@ -546,7 +615,7 @@ export default function ArtworkFactSheet() {
                 </div>
 
                 {/* ── Related works — studies and primary work ── */}
-                {((w.studies && w.studies.length > 0) || w.primaryWork || (w.versions && w.versions.length > 0)) && (
+                {((w.studies && w.studies.length > 0) || w.primaryWork) && (
                   <div className="aw-related">
                     <div className="aw-related-label">Related works</div>
                     <div className="aw-related-grid">
@@ -584,24 +653,6 @@ export default function ArtworkFactSheet() {
                               {study.medium && <span> · {study.medium}</span>}
                             </div>
                           </div>
-                        </Link>
-                      ))}
-                      {w.versions && w.versions.map((version, i) => (
-                        <Link key={i} to={`/works/${version.artworkId}`} className="aw-related-card">
-                          {version.thumbnailUrl || version.imageUrl
-                            ? <img className="aw-related-thumb"
-                                src={version.thumbnailUrl || version.imageUrl}
-                                alt={version.title} />
-                            : <div className="aw-related-thumb-ph">◎</div>
-                           }
-                           <div className="aw-related-info">
-                             <div className="aw-related-rel">Version</div>
-                             <div className="aw-related-title">{version.title}</div>
-                             <div className="aw-related-meta">
-                               {version.dateText && <span>{version.dateText}</span>}
-                               {version.medium && <span> · {version.medium}</span>}
-                             </div>
-                           </div>
                         </Link>
                       ))}
                     </div>

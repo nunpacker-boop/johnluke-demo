@@ -58,7 +58,7 @@ export async function onRequestGet({ request, env }) {
     // Primary work this is a study for (w is the study)
     OPTIONAL MATCH (w)-[:STUDY_FOR]->(primary:Artwork)
 
-    // Related versions (peer works, bidirectional)
+    // Related versions (peer relationship, bidirectional)
     OPTIONAL MATCH (w)-[:RELATED_VERSION]->(version:Artwork)
 
     WITH w,
@@ -80,6 +80,14 @@ export async function onRequestGet({ request, env }) {
         thumbnailUrl: primary.thumbnailUrl,
         imageUrl:     primary.imageUrl
       } ELSE null END AS primaryWork,
+      collect(DISTINCT CASE WHEN version IS NOT NULL THEN {
+        artworkId:    version.artworkId,
+        title:        version.title,
+        dateText:     version.dateText,
+        medium:       version.medium,
+        thumbnailUrl: version.thumbnailUrl,
+        imageUrl:     version.imageUrl
+      } ELSE null END) AS versionsRaw,
       collect(DISTINCT CASE WHEN ex IS NOT NULL THEN {
         exhibitionId:    ex.exhibitionId,
         title:           ex.title,
@@ -92,14 +100,6 @@ export async function onRequestGet({ request, env }) {
         sold:            exr.sold,
         catalogueNotes:  exr.catalogueNotes
       } ELSE null END) AS exhibitionsRaw,
-      collect(DISTINCT CASE WHEN version IS NOT NULL THEN {
-        artworkId:    version.artworkId,
-        title:        version.title,
-        dateText:     version.dateText,
-        medium:       version.medium,
-        thumbnailUrl: version.thumbnailUrl,
-        imageUrl:     version.imageUrl
-      } ELSE null END) AS versionsRaw,
       collect(DISTINCT CASE WHEN o IS NOT NULL THEN {
         ownerName:     o.name,
         ownerType:     o.type,
@@ -112,7 +112,8 @@ export async function onRequestGet({ request, env }) {
         source:        op.source,
         notes:         op.notes
       } ELSE null END) AS ownershipRaw
-RETURN
+
+    RETURN
       w.artworkId        AS artworkId,
       w.title            AS title,
       w.dateText         AS dateText,
@@ -130,8 +131,8 @@ RETURN
       periods,
       [e IN exhibitionsRaw WHERE e IS NOT NULL]  AS exhibitions,
       [o IN ownershipRaw  WHERE o IS NOT NULL]   AS ownership,
-      [s IN studiesRaw    WHERE s IS NOT NULL]   AS studies,
-      [v IN versionsRaw   WHERE v IS NOT NULL]   AS versions,
+      [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
+      [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
       primaryWork
   `;
 
@@ -175,4 +176,77 @@ RETURN
 
   const artwork = rows[0] || null;
   return new Response(JSON.stringify({ artwork }), { headers: cors });
+}
+
+/**
+ * PATCH /api/artwork?id=artwork-jl-XXX
+ * Updates specific fields on an Artwork node.
+ * Accepts JSON body with any subset of allowed fields.
+ * Currently supports: timelineVisible, isStudy, selectedCatalogue,
+ *   title, dateText, yearFrom, yearTo, medium, support, notes, description
+ */
+export async function onRequestPatch({ request, env }) {
+  const cors = {
+    "Access-Control-Allow-Origin":  "*",
+    "Access-Control-Allow-Methods": "GET, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
+  };
+
+  if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  if (!env.NEO4J_URI || !env.NEO4J_USER || !env.NEO4J_PASSWORD) {
+    return new Response(JSON.stringify({ error: "Database not configured." }), { status: 503, headers: cors });
+  }
+
+  const url = new URL(request.url);
+  const id  = (url.searchParams.get("id") || "").trim();
+  if (!id) return new Response(JSON.stringify({ error: "No artwork id" }), { status: 400, headers: cors });
+
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400, headers: cors });
+  }
+
+  // Whitelist of fields that can be updated via this endpoint
+  const ALLOWED = new Set([
+    "timelineVisible", "isStudy", "selectedCatalogue",
+    "title", "dateText", "yearFrom", "yearTo", "dateUncertain",
+    "medium", "support", "mediumNotes", "notes", "description",
+    "currentLocation", "dimensionsText", "heightCm", "widthCm",
+  ]);
+
+  const updates = Object.entries(body).filter(([k]) => ALLOWED.has(k));
+  if (!updates.length) return new Response(JSON.stringify({ error: "No valid fields to update" }), { status: 400, headers: cors });
+
+  // Build SET clause with named parameters
+  const setClauses = updates.map(([k]) => `w.${k} = $${k}`).join(", ");
+  const params = Object.fromEntries(updates);
+
+  const host       = env.NEO4J_URI.replace(/^neo4j\+s:\/\//, "https://").replace(/^neo4j:\/\//, "http://").replace(/\/$/, "");
+  const endpoint   = `${host}/db/neo4j/query/v2`;
+  const credentials = btoa(`${env.NEO4J_USER}:${env.NEO4J_PASSWORD}`);
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Authorization": `Basic ${credentials}`,
+    },
+    body: JSON.stringify({
+      statement: `MATCH (w:Artwork {artworkId: $id}) SET ${setClauses} RETURN w.artworkId AS id, ${updates.map(([k]) => `w.${k} AS ${k}`).join(", ")}`,
+      parameters: { id, ...params },
+    }),
+  });
+
+  const data = await res.json();
+  if (data.errors?.length) {
+    return new Response(JSON.stringify({ error: data.errors[0].message }), { status: 500, headers: cors });
+  }
+
+  const row = data?.data?.values?.[0];
+  if (!row) return new Response(JSON.stringify({ error: "Artwork not found" }), { status: 404, headers: cors });
+
+  return new Response(JSON.stringify({ ok: true, updated: Object.fromEntries(updates.map(([k], i) => [k, row[i + 1]])) }), { headers: cors });
 }
