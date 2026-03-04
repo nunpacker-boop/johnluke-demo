@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "../../hooks/useSession.jsx";
 import { Link, useParams } from "react-router-dom";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -123,38 +124,19 @@ export default function ArtworkFactSheet() {
       .catch(e => { setError(e.message); setLoading(false); });
   }, [artworkId]);
 
-  // timelineVisible admin toggle
-  const [tlVisible, setTlVisible] = useState(null); // null = not yet loaded
-  const [tlSaving, setTlSaving]   = useState(false);
-  const [tlMsg, setTlMsg]         = useState(null);
+  // Session-based timeline visibility (per-visitor, not global)
+  const { isHidden, setTimelineVisible, isReady: sessionReady, isSaving } = useSession();
+  const [tlMsg, setTlMsg] = useState(null);
 
-  useEffect(() => {
-    if (artwork) setTlVisible(artwork.timelineVisible !== false);
-  }, [artwork]);
+  const tlHidden  = artworkId ? isHidden(artworkId) : false;
+  const tlVisible = !tlHidden;
 
-  const toggleTimelineVisible = async () => {
-    if (!artworkId || tlSaving) return;
+  const toggleTimelineVisible = () => {
+    if (!artworkId || isSaving) return;
     const next = !tlVisible;
-    setTlSaving(true);
-    setTlMsg(null);
-    try {
-      const res = await fetch(`/api/artwork?id=${encodeURIComponent(artworkId)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timelineVisible: next }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setTlVisible(next);
-        setTlMsg(next ? "Shown on timeline" : "Hidden from timeline");
-        setTimeout(() => setTlMsg(null), 2500);
-      } else {
-        setTlMsg("Save failed");
-      }
-    } catch {
-      setTlMsg("Save failed");
-    }
-    setTlSaving(false);
+    setTimelineVisible(artworkId, next);
+    setTlMsg(next ? "Shown on your timeline" : "Hidden from your timeline");
+    setTimeout(() => setTlMsg(null), 2500);
   };
 
   const w = artwork;
@@ -506,7 +488,7 @@ export default function ArtworkFactSheet() {
                       </dl>
 
                       {/* Timeline visibility toggle */}
-                      {tlVisible !== null && (
+                      {sessionReady && (
                         <div style={{
                           marginTop: 14, paddingTop: 14,
                           borderTop: "1px solid var(--light)",
@@ -514,8 +496,8 @@ export default function ArtworkFactSheet() {
                         }}>
                           <button
                             onClick={toggleTimelineVisible}
-                            disabled={tlSaving}
-                            title={tlVisible ? "Hide this work from the timeline" : "Show this work on the timeline"}
+                            disabled={isSaving}
+                            title={tlVisible ? "Hide from your timeline view (only affects your session)" : "Show on your timeline view"}
                             style={{
                               display: "flex", alignItems: "center", gap: 7,
                               background: "none", border: "1px solid var(--light)",
@@ -529,7 +511,7 @@ export default function ArtworkFactSheet() {
                             <span style={{ fontSize: "0.9rem" }}>
                               {tlVisible ? "◉" : "◎"}
                             </span>
-                            {tlSaving ? "Saving…" : tlVisible ? "On timeline" : "Hidden from timeline"}
+                            {isSaving ? "Saving…" : tlVisible ? "On your timeline" : "Hidden from your timeline"}
                           </button>
                           {tlMsg && (
                             <span style={{ fontSize: "0.72rem", color: "var(--text-muted)",

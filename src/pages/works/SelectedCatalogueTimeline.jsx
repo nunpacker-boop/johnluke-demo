@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSession } from "../../hooks/useSession.jsx";
 import { Link, useNavigate } from "react-router-dom";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -442,6 +443,9 @@ export default function SelectedCatalogueTimeline() {
 
   const containerRef  = useRef(null);
   const [scrollX, setScrollX]       = useState(0);
+  // Session-based visibility overrides
+  const { isHidden, setTimelineVisible, isReady: sessionReady } = useSession();
+
   const [activeFilters, setActiveFilters] = useState(
     new Set(MEDIUM_GROUPS.map(g => g.id))
   );
@@ -1089,13 +1093,14 @@ export default function SelectedCatalogueTimeline() {
   const primaryLayout = computeLayout(primaryArtworks, PRIMARY_BAND);
   const studyLayout   = computeLayout(studyArtworks,   STUDY_BAND);
 
-  // timelineVisible=false works — always shown as dots regardless of filters
-  const hiddenPrimary = primaryArtworks.filter(w => w.timelineVisible === false);
-  const hiddenStudy   = studyArtworks.filter(w => w.timelineVisible === false);
+  // Works hidden by this visitor's session override, or by global timelineVisible=false
+  const isWorkHidden = (w) => w.timelineVisible === false || isHidden(w.artworkId);
+  const hiddenPrimary = primaryArtworks.filter(isWorkHidden);
+  const hiddenStudy   = studyArtworks.filter(isWorkHidden);
 
-  // Filter artworks by active medium groups AND theme (only timelineVisible works)
+  // Filter artworks by active medium groups AND theme (only visible works)
   const filterWork = (w) => {
-    if (w.timelineVisible === false) return false;
+    if (isWorkHidden(w)) return false;
     const g = mediumGroup(w.medium);
     const themeMatch = !w.theme || activeThemes.has(w.theme);
     return activeFilters.has(g.id) && themeMatch;

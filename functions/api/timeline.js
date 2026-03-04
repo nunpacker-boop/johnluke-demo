@@ -68,6 +68,17 @@ const CANONICAL_PERIODS = [
   },
 ];
 
+// ── Session cookie helper ─────────────────────────────────────────────────────
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(";").forEach(part => {
+    const [k, ...v] = part.trim().split("=");
+    if (k) cookies[k.trim()] = decodeURIComponent(v.join("="));
+  });
+  return cookies;
+}
+
 export async function onRequestGet({ request, env }) {
   const cors = {
     "Access-Control-Allow-Origin":  "*",
@@ -221,6 +232,36 @@ export async function onRequestGet({ request, env }) {
         artworks: allArtworks.filter(w =>
           w.yearFrom >= p.yearFrom && w.yearFrom <= p.yearTo
         ),
+      }));
+    }
+
+    // ── Merge session overrides from KV ──────────────────────────────────────
+    let sessionOverrides = {};
+    if (env.JL_SESSIONS) {
+      try {
+        const cookies = parseCookies(request.headers.get("Cookie"));
+        const uuid    = cookies["jl_session_id"];
+        if (uuid && /^[0-9a-f-]{36}$/.test(uuid)) {
+          const raw = await env.JL_SESSIONS.get(`session:${uuid}`);
+          if (raw) {
+            const session = JSON.parse(raw);
+            sessionOverrides = session.timelineOverrides || {};
+          }
+        }
+      } catch (_) {
+        // KV error — proceed without overrides
+      }
+    }
+
+    // Apply overrides: session can hide (false) or un-hide (true) artworks
+    if (Object.keys(sessionOverrides).length > 0) {
+      periods = periods.map(p => ({
+        ...p,
+        artworks: (p.artworks || []).map(w => {
+          const override = sessionOverrides[w.artworkId];
+          if (override === undefined) return w;
+          return { ...w, timelineVisible: override };
+        }),
       }));
     }
 
