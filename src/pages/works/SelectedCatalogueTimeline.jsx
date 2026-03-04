@@ -322,6 +322,10 @@ export default function SelectedCatalogueTimeline() {
 
   const containerRef  = useRef(null);
   const [scrollX, setScrollX]       = useState(0);
+  const [activeFilters, setActiveFilters] = useState(
+    new Set(MEDIUM_GROUPS.map(g => g.id))
+  );
+  const [filterOpen, setFilterOpen] = useState(false);
   const [viewportW, setViewportW]   = useState(1200);
   const [isDragging, setIsDragging] = useState(false);
   const [bgStyle, setBgStyle]       = useState({});
