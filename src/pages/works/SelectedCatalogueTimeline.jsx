@@ -444,7 +444,7 @@ export default function SelectedCatalogueTimeline() {
   const containerRef  = useRef(null);
   const [scrollX, setScrollX]       = useState(0);
   // Session-based visibility overrides
-  const { isHidden, setTimelineVisible, isReady: sessionReady } = useSession();
+  const { isHidden, setTimelineVisible, resetSession, hiddenCount, isReady: sessionReady } = useSession();
 
   const [activeFilters, setActiveFilters] = useState(
     new Set(MEDIUM_GROUPS.map(g => g.id))
@@ -1006,6 +1006,15 @@ export default function SelectedCatalogueTimeline() {
           background: rgba(255,255,255,0.12); }
         .tl-filter-pill.active { color: rgba(255,220,120,0.9);
           border-color: rgba(255,220,120,0.4); }
+        .tl-reset-btn {
+          height: 30px; padding: 0 12px;
+          border: none; background: none;
+          color: rgba(255,255,255,0.3); font-size: 0.72rem;
+          letter-spacing: 0.05em; cursor: pointer;
+          font-family: Georgia, serif; font-style: italic;
+          transition: color 0.2s;
+        }
+        .tl-reset-btn:hover { color: rgba(255,255,255,0.7); }
 
         .tl-filter-panel {
           position: absolute; left: 0; top: calc(100% + 10px);
@@ -1184,6 +1193,15 @@ export default function SelectedCatalogueTimeline() {
                   />
                 )}
               </div>
+              {hiddenCount > 0 && (
+                <button
+                  className="tl-reset-btn"
+                  onClick={resetSession}
+                  title="Reset your timeline view to defaults"
+                >
+                  ↺ Reset view ({hiddenCount} hidden)
+                </button>
+              )}
             </div>
 
             <div className="tl-year-display">
