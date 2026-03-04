@@ -502,7 +502,7 @@ export default function ArtworkFactSheet() {
                               display: "flex", alignItems: "center", gap: 7,
                               background: "none", border: "1px solid var(--light)",
                               borderRadius: 4, padding: "4px 10px",
-                              cursor: tlSaving ? "wait" : "pointer",
+                              cursor: isSaving ? "wait" : "pointer",
                               fontSize: "0.72rem", letterSpacing: "0.04em",
                               color: tlVisible ? "var(--text-muted)" : "rgba(180,100,100,0.9)",
                               transition: "all 0.2s",
