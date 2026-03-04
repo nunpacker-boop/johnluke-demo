@@ -24,6 +24,54 @@ const PERIOD_PALETTES = [
   { from: "#18100e", to: "#201410" },  // Late — dark sienna
 ];
 
+// ── Medium filter groups ──────────────────────────────────────────────────────
+const MEDIUM_GROUPS = [
+  {
+    id: "oil-tempera",
+    label: "Oil & Tempera",
+    color: "#c8935a",          // warm amber
+    mediums: ["Oil and Tempera", "Oil", "Tempera", "Encaustic", "Distemper"],
+  },
+  {
+    id: "watercolour",
+    label: "Watercolour",
+    color: "#6fa8c4",          // soft blue
+    mediums: ["Watercolour", "Gouache", "Charcoal and Watercolour Wash"],
+  },
+  {
+    id: "drawing",
+    label: "Drawing",
+    color: "#a8b89a",          // muted sage
+    mediums: ["Pencil", "Coloured Pencil", "Charcoal", "Conté", "Wax Crayon",
+              "Pastel", "Pen and Ink with Wash"],
+  },
+  {
+    id: "print",
+    label: "Print",
+    color: "#b39ddb",          // soft violet
+    mediums: ["Linocut", "Woodcut"],
+  },
+  {
+    id: "sculpture",
+    label: "Sculpture",
+    color: "#c4a882",          // stone buff
+    mediums: ["Sculpture"],
+  },
+  {
+    id: "other",
+    label: "Other",
+    color: "#888888",          // neutral grey
+    mediums: ["Mixed Media", "Unknown", null, undefined],
+  },
+];
+
+function mediumGroup(medium) {
+  for (const g of MEDIUM_GROUPS) {
+    if (g.mediums.includes(medium)) return g;
+  }
+  return MEDIUM_GROUPS[MEDIUM_GROUPS.length - 1]; // fallback to Other
+}
+
 function yearToX(year) {
   return CANVAS_PADDING + (year - START_YEAR) * PX_PER_YEAR;
 }
@@ -75,6 +123,7 @@ function computeLayout(works, band) {
 // ── Artwork card on canvas ────────────────────────────────────────────────────
 function ArtworkMarker({ work, x, y, scrollX, viewportW, onClick }) {
   const isStudy = !!work.isStudy;
+  const group   = mediumGroup(work.medium);
   const [imgErr, setImgErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -133,6 +182,47 @@ function ArtworkMarker({ work, x, y, scrollX, viewportW, onClick }) {
         <div className="tl-artwork-year">{work.yearFrom || ""}</div>
       </div>
       <div className="tl-artwork-hint">View →</div>
+      <div className="tl-medium-dot" style={{ background: group.color }} title={group.label} />
+    </div>
+  );
+}
+
+// ── Filter panel ─────────────────────────────────────────────────────────────
+function FilterPanel({ activeFilters, onChange, onClose }) {
+  const allOn = activeFilters.size === MEDIUM_GROUPS.length;
+
+  const toggle = (id) => {
+    const next = new Set(activeFilters);
+    if (next.has(id)) { if (next.size > 1) next.delete(id); }
+    else next.add(id);
+    onChange(next);
+  };
+
+  const toggleAll = () => {
+    onChange(allOn
+      ? new Set([MEDIUM_GROUPS[0].id])
+      : new Set(MEDIUM_GROUPS.map(g => g.id))
+    );
+  };
+
+  return (
+    <div className="tl-filter-panel">
+      <div className="tl-filter-heading">Filter by medium</div>
+      {MEDIUM_GROUPS.map(g => {
+        const on = activeFilters.has(g.id);
+        return (
+          <div key={g.id} className="tl-filter-row" onClick={() => toggle(g.id)}>
+            <div className={`tl-filter-swatch${on ? "" : " off"}`}
+                 style={{ background: g.color }} />
+            <span className={`tl-filter-label${on ? "" : " off"}`}>{g.label}</span>
+            <span className="tl-filter-check">{on ? "✓" : ""}</span>
+          </div>
+        );
+      })}
+      <hr className="tl-filter-divider" />
+      <div className="tl-filter-all" onClick={toggleAll}>
+        {allOn ? "Hide all" : "Show all"}
+      </div>
     </div>
   );
 }
@@ -757,6 +847,91 @@ export default function SelectedCatalogueTimeline() {
           50%  { width:60%; left:20%; }
           100% { width:0; left:100%; }
         }
+
+        /* ── Filter panel ── */
+        .tl-filter-btn {
+          position: absolute; left: 20px; top: 50%;
+          transform: translateY(-50%);
+          width: 36px; height: 36px;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 50%;
+          background: rgba(0,0,0,0.3);
+          color: rgba(255,255,255,0.7);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 0.85rem;
+          transition: all 0.2s; z-index: 200;
+          backdrop-filter: blur(4px);
+        }
+        .tl-filter-btn:hover { background: rgba(0,0,0,0.5); color: white;
+          border-color: rgba(255,255,255,0.4); }
+        .tl-filter-btn.open { background: rgba(255,255,255,0.15);
+          border-color: rgba(255,255,255,0.5); color: white; }
+
+        .tl-filter-panel {
+          position: absolute; left: 64px; top: 50%;
+          transform: translateY(-50%);
+          background: rgba(8,12,20,0.92);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 10px;
+          padding: 16px 18px;
+          z-index: 200;
+          min-width: 180px;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+          animation: tlFadeIn 0.15s ease;
+        }
+        @keyframes tlFadeIn { from { opacity:0; transform:translateY(-50%) translateX(-6px); }
+                              to   { opacity:1; transform:translateY(-50%) translateX(0); } }
+        .tl-filter-heading {
+          font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+          color: rgba(255,255,255,0.35); margin-bottom: 12px;
+        }
+        .tl-filter-row {
+          display: flex; align-items: center; gap: 10px;
+          padding: 5px 0; cursor: pointer; user-select: none;
+        }
+        .tl-filter-row:hover .tl-filter-label { color: white; }
+        .tl-filter-swatch {
+          width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+          transition: opacity 0.15s;
+        }
+        .tl-filter-swatch.off { opacity: 0.2; }
+        .tl-filter-label {
+          font-size: 0.8rem; color: rgba(255,255,255,0.6);
+          transition: color 0.15s; flex: 1;
+        }
+        .tl-filter-label.off { color: rgba(255,255,255,0.25); }
+        .tl-filter-check {
+          font-size: 0.7rem; color: rgba(255,255,255,0.4);
+          width: 14px; text-align: center;
+        }
+        .tl-filter-divider {
+          border: none; border-top: 1px solid rgba(255,255,255,0.08);
+          margin: 10px 0;
+        }
+        .tl-filter-all {
+          font-size: 0.72rem; color: rgba(255,255,255,0.35);
+          cursor: pointer; text-align: center; padding-top: 2px;
+          letter-spacing: 0.04em;
+          transition: color 0.15s;
+        }
+        .tl-filter-all:hover { color: rgba(255,255,255,0.7); }
+
+        /* ── Medium colour dot on artwork card ── */
+        .tl-medium-dot {
+          width: 7px; height: 7px; border-radius: 50%;
+          position: absolute; top: 7px; right: 7px;
+          opacity: 0.75;
+        }
+        /* ── Filtered-out artworks show as dots ── */
+        .tl-artwork-dot {
+          position: absolute;
+          width: 8px; height: 8px; border-radius: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.25;
+          pointer-events: none;
+          transition: opacity 0.2s;
+        }
       `;
     document.head.appendChild(el);
     return () => { document.head.removeChild(el); };
@@ -775,6 +950,14 @@ export default function SelectedCatalogueTimeline() {
   // Compute force-directed layouts for each band
   const primaryLayout = computeLayout(primaryArtworks, PRIMARY_BAND);
   const studyLayout   = computeLayout(studyArtworks,   STUDY_BAND);
+
+  // Filter artworks by active medium groups
+  const filterWork = (w) => {
+    const g = mediumGroup(w.medium);
+    return activeFilters.has(g.id);
+  };
+  const visiblePrimary = primaryArtworks.filter(filterWork);
+  const visibleStudy   = studyArtworks.filter(filterWork);
 
   const allExhibitions = (data?.exhibitions || [])
     .filter(ex => ex.yearFrom || ex.yearText);
@@ -814,6 +997,23 @@ export default function SelectedCatalogueTimeline() {
       {/* Timeline */}
       {!loading && !error && data && (
         <>
+          {/* Filter toggle button — sits in left margin, vertically centred */}
+          <button
+            className={`tl-filter-btn${filterOpen ? " open" : ""}`}
+            style={{ top: 32 }}
+            onClick={() => setFilterOpen(o => !o)}
+            title="Filter by medium"
+          >
+            ⊟
+          </button>
+          {filterOpen && (
+            <FilterPanel
+              activeFilters={activeFilters}
+              onChange={setActiveFilters}
+              onClose={() => setFilterOpen(false)}
+            />
+          )}
+
           {/* Top bar */}
           <div className="tl-topbar">
             <div className="tl-topbar-left">
@@ -882,10 +1082,18 @@ export default function SelectedCatalogueTimeline() {
               Studies
             </div>
 
-            {/* Primary artwork markers */}
+            {/* Primary artwork markers — full cards for visible, dots for filtered-out */}
             {primaryArtworks.map((work, i) => {
               const pos = primaryLayout[work.artworkId];
               if (!pos) return null;
+              const visible = filterWork(work);
+              if (!visible) {
+                const g = mediumGroup(work.medium);
+                return (
+                  <div key={work.artworkId || i} className="tl-artwork-dot"
+                    style={{ left: pos.x + 110, top: pos.y + 80, background: g.color }} />
+                );
+              }
               return (
                 <ArtworkMarker
                   key={work.artworkId || i}
@@ -903,6 +1111,14 @@ export default function SelectedCatalogueTimeline() {
             {studyArtworks.map((work, i) => {
               const pos = studyLayout[work.artworkId];
               if (!pos) return null;
+              const visible = filterWork(work);
+              if (!visible) {
+                const g = mediumGroup(work.medium);
+                return (
+                  <div key={work.artworkId || i} className="tl-artwork-dot"
+                    style={{ left: pos.x + 110, top: pos.y + 80, background: g.color }} />
+                );
+              }
               return (
                 <ArtworkMarker
                   key={work.artworkId || i}
