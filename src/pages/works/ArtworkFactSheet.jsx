@@ -141,6 +141,13 @@ export default function ArtworkFactSheet() {
 
   const w = artwork;
   const image = w?.imageUrl || w?.thumbnailUrl;
+
+  // Archive excerpts — split by access tier
+  // TODO: wire isResearcher to actual auth when researcher accounts are built
+  const isResearcher = false;
+  const publicExcerpts     = (w?.excerpts || []).filter(e => e.accessTier === "public");
+  const researchExcerpts   = (w?.excerpts || []).filter(e => e.accessTier === "researcher");
+  const hasArchiveContent  = publicExcerpts.length > 0 || researchExcerpts.length > 0;
   const id = w?.artworkId ? w.artworkId.replace("artwork-", "").toUpperCase() : null;
 
   const exhibitions = (w?.exhibitions || [])
@@ -263,6 +270,45 @@ export default function ArtworkFactSheet() {
         .cert-probable  { background:#fdf3e0; color:#ae6818; }
         .cert-uncertain { background:#f0f0f0; color:#6a6a6a; }
         .cert-disputed  { background:#fde8e8; color:#9b2226; }
+
+        /* ── From the archive ── */
+        .aw-archive { max-width: 760px; margin: 0 auto 40px; }
+        .aw-archive-label { font-size:0.72rem; font-weight:700; text-transform:uppercase;
+          letter-spacing:0.1em; color:var(--shadow); opacity:0.45; margin-bottom:16px; }
+        .aw-excerpt {
+          border-left: 3px solid var(--primary);
+          padding: 0 0 0 20px; margin-bottom: 24px;
+        }
+        .aw-excerpt-text {
+          font-family: Georgia, serif; font-style: italic;
+          font-size: 0.96rem; line-height: 1.8; color: var(--shadow);
+          margin: 0 0 10px;
+        }
+        .aw-excerpt-meta {
+          font-size: 0.72rem; color: var(--shadow); opacity: 0.55;
+          display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .aw-excerpt-source { font-weight: 600; }
+        .aw-excerpt-doc-link {
+          color: var(--primary); text-decoration: none; font-size: 0.72rem;
+        }
+        .aw-excerpt-doc-link:hover { text-decoration: underline; }
+        .aw-excerpt-confidence {
+          display: inline-block; padding: 1px 7px; border-radius: 8px;
+          font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase;
+          background: rgba(0,0,0,0.06);
+        }
+        .aw-archive-teaser {
+          padding: 16px 20px;
+          background: var(--secondary); border-radius: 6px;
+          border: 1px solid var(--light);
+          font-size: 0.82rem; color: var(--shadow);
+        }
+        .aw-archive-teaser strong { color: var(--primary); }
+        .aw-archive-divider {
+          border: none; border-top: 1px solid var(--light);
+          margin: 20px 0;
+        }
 
         /* ── Research notes ── */
         .aw-notes { font-size:0.88rem; color:var(--shadow); opacity:0.65;
@@ -638,6 +684,86 @@ export default function ArtworkFactSheet() {
                         </Link>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* ── From the archive ── */}
+                {hasArchiveContent && (
+                  <div className="aw-archive">
+                    <div className="aw-archive-label">From the archive</div>
+
+                    {/* Public excerpts — visible to all */}
+                    {publicExcerpts.map((ex, i) => (
+                      <div key={i} className="aw-excerpt">
+                        <div className="aw-excerpt-text">
+                          &ldquo;{ex.text}&rdquo;
+                        </div>
+                        {ex.context && (
+                          <div style={{ fontSize: "0.8rem", color: "var(--shadow)", opacity: 0.7,
+                            fontStyle: "italic", marginBottom: 8 }}>
+                            {ex.context}
+                          </div>
+                        )}
+                        <div className="aw-excerpt-meta">
+                          <span className="aw-excerpt-source">
+                            {ex.docAuthor}
+                            {ex.docRecipient ? ` to ${ex.docRecipient}` : ""}
+                            {ex.docDateText ? `, ${ex.docDateText}` : ""}
+                          </span>
+                          {ex.docArchiveRef && <span>{ex.docArchiveRef}</span>}
+                          {ex.confidence !== "certain" && (
+                            <span className="aw-excerpt-confidence">{ex.confidence}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Researcher excerpts */}
+                    {isResearcher ? (
+                      <>
+                        {researchExcerpts.length > 0 && publicExcerpts.length > 0 && (
+                          <hr className="aw-archive-divider" />
+                        )}
+                        {researchExcerpts.map((ex, i) => (
+                          <div key={i} className="aw-excerpt" style={{
+                            borderLeftColor: "var(--accent)",
+                          }}>
+                            <div className="aw-excerpt-text">
+                              &ldquo;{ex.text}&rdquo;
+                            </div>
+                            {ex.context && (
+                              <div style={{ fontSize: "0.8rem", color: "var(--shadow)", opacity: 0.7,
+                                fontStyle: "italic", marginBottom: 8 }}>
+                                {ex.context}
+                              </div>
+                            )}
+                            <div className="aw-excerpt-meta">
+                              <span className="aw-excerpt-source">
+                                {ex.docAuthor}
+                                {ex.docRecipient ? ` to ${ex.docRecipient}` : ""}
+                                {ex.docDateText ? `, ${ex.docDateText}` : ""}
+                              </span>
+                              {ex.docArchiveRef && <span>{ex.docArchiveRef}</span>}
+                              {ex.confidence !== "certain" && (
+                                <span className="aw-excerpt-confidence">{ex.confidence}</span>
+                              )}
+                              {ex.documentId && (
+                                <a href={`/archive/documents/${ex.documentId}`}
+                                  className="aw-excerpt-doc-link">
+                                  View full letter →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    ) : researchExcerpts.length > 0 && (
+                      <div className="aw-archive-teaser">
+                        <strong>{researchExcerpts.length} further reference{researchExcerpts.length > 1 ? "s" : ""}</strong>
+                        {" "}including full letter transcriptions with inline artwork references
+                        are available to <a href="/access" style={{ color: "var(--primary)" }}>research account holders</a>.
+                      </div>
+                    )}
                   </div>
                 )}
 

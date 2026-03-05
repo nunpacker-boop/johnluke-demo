@@ -29,6 +29,7 @@ import Sketches from "./pages/archive/Sketches.jsx";
 import Photographs from "./pages/archive/Photographs.jsx";
 import PressAndPublications from "./pages/archive/PressAndPublications.jsx";
 import RequestAccess from "./pages/archive/RequestAccess.jsx";
+import DocumentViewer from "./pages/archive/DocumentViewer.jsx";
 
 // Exhibitions
 import Exhibitions from "./pages/exhibitions/index.jsx";
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/archive/photographs" element={<Photographs />} />
           <Route path="/archive/press-and-publications" element={<PressAndPublications />} />
           <Route path="/archive/request-access" element={<RequestAccess />} />
+          <Route path="/archive/documents/:documentId" element={<DocumentViewer />} />
 
           {/* Exhibitions */}
           <Route path="/exhibitions" element={<Exhibitions />} />

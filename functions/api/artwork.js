@@ -52,6 +52,10 @@ export async function onRequestGet({ request, env }) {
     // Ownership periods
     OPTIONAL MATCH (w)-[op:OWNED_BY]->(o:Owner)
 
+    // Archive excerpts referencing this artwork
+    OPTIONAL MATCH (exc:Excerpt)-[:REFERENCES_ARTWORK]->(w)
+    OPTIONAL MATCH (exc)-[:FROM_DOCUMENT]->(doc:Document)
+
     // Studies of this work (w is the primary)
     OPTIONAL MATCH (study:Artwork)-[:STUDY_FOR]->(w)
 
@@ -63,6 +67,22 @@ export async function onRequestGet({ request, env }) {
 
     WITH w,
       collect(DISTINCT t.name)  AS techniques,
+      collect(DISTINCT CASE WHEN exc IS NOT NULL THEN {
+        excerptId:   exc.excerptId,
+        text:        exc.text,
+        context:     exc.context,
+        accessTier:  exc.accessTier,
+        confidence:  exc.confidence,
+        altTitleUsed: exc.altTitleUsed,
+        topics:      exc.topics,
+        documentId:  doc.documentId,
+        docTitle:    doc.title,
+        docAuthor:   doc.author,
+        docRecipient: doc.recipient,
+        docDateText: doc.dateText,
+        docType:     doc.type,
+        docArchiveRef: doc.archiveRef
+      } ELSE null END) AS excerptsRaw,
       collect(DISTINCT p.name)  AS periods,
       collect(DISTINCT CASE WHEN study IS NOT NULL THEN {
         artworkId:    study.artworkId,
@@ -134,6 +154,7 @@ export async function onRequestGet({ request, env }) {
       [s IN studiesRaw   WHERE s IS NOT NULL]    AS studies,
       [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
       primaryWork,
+      [e IN excerptsRaw WHERE e IS NOT NULL] AS excerpts,
       coalesce(w.timelineVisible, true)          AS timelineVisible,
       coalesce(w.isStudy, false)                 AS isStudy,
       coalesce(w.selectedCatalogue, false)       AS selectedCatalogue,
