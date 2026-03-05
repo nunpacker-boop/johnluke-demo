@@ -52,6 +52,10 @@ export async function onRequestGet({ request, env }) {
     // Ownership periods
     OPTIONAL MATCH (w)-[op:OWNED_BY]->(o:Owner)
 
+    // Archive photographs depicting this artwork (researcher tier)
+    OPTIONAL MATCH (photo:Document)-[:DEPICTS_ARTWORK]->(w)
+    OPTIONAL MATCH (pimg:DocumentImage)-[:IMAGE_OF]->(photo)
+
     // Archive excerpts referencing this artwork
     OPTIONAL MATCH (exc:Excerpt)-[:REFERENCES_ARTWORK]->(w)
     OPTIONAL MATCH (exc)-[:FROM_DOCUMENT]->(doc:Document)
@@ -67,6 +71,16 @@ export async function onRequestGet({ request, env }) {
 
     WITH w,
       collect(DISTINCT t.name)  AS techniques,
+      collect(DISTINCT CASE WHEN photo IS NOT NULL THEN {
+        documentId:   photo.documentId,
+        title:        photo.title,
+        dateText:     photo.dateText,
+        archiveRef:   photo.archiveRef,
+        accessTier:   photo.accessTier,
+        imageUrl:     pimg.imageUrl,
+        thumbnailUrl: pimg.thumbnailUrl,
+        caption:      pimg.caption
+      } ELSE null END) AS archivePhotosRaw,
       collect(DISTINCT CASE WHEN exc IS NOT NULL THEN {
         excerptId:   exc.excerptId,
         text:        exc.text,
@@ -155,6 +169,7 @@ export async function onRequestGet({ request, env }) {
       [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
       primaryWork,
       [e IN excerptsRaw WHERE e IS NOT NULL] AS excerpts,
+      [p IN archivePhotosRaw WHERE p IS NOT NULL] AS archivePhotos,
       coalesce(w.timelineVisible, true)          AS timelineVisible,
       coalesce(w.isStudy, false)                 AS isStudy,
       coalesce(w.selectedCatalogue, false)       AS selectedCatalogue,

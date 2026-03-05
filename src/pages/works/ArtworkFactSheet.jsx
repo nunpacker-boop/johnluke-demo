@@ -145,6 +145,9 @@ export default function ArtworkFactSheet() {
   // Archive excerpts — split by access tier
   // TODO: wire isResearcher to actual auth when researcher accounts are built
   const isResearcher = false;
+  const archivePhotos      = (w?.archivePhotos || []);
+  const hasArchivePhotos   = archivePhotos.length > 0;
+
   const publicExcerpts     = (w?.excerpts || []).filter(e => e.accessTier === "public");
   const researchExcerpts   = (w?.excerpts || []).filter(e => e.accessTier === "researcher");
   const hasArchiveContent  = publicExcerpts.length > 0 || researchExcerpts.length > 0;
@@ -308,6 +311,25 @@ export default function ArtworkFactSheet() {
         .aw-archive-divider {
           border: none; border-top: 1px solid var(--light);
           margin: 20px 0;
+        }
+
+        /* ── Archive photographs ── */
+        .aw-archphoto { max-width:760px; margin:0 auto 40px; }
+        .aw-archphoto-grid { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
+        .aw-archphoto-card {
+          position:relative; border:1px solid var(--light); border-radius:6px;
+          overflow:hidden; cursor:pointer; transition:border-color 0.15s;
+          width:160px; flex-shrink:0;
+        }
+        .aw-archphoto-card:hover { border-color:var(--primary); }
+        .aw-archphoto-img { width:100%; height:120px; object-fit:cover; display:block;
+          background:var(--secondary); }
+        .aw-archphoto-label { padding:8px 10px; font-size:0.7rem;
+          color:var(--shadow); opacity:0.65; line-height:1.4; }
+        .aw-archphoto-locked {
+          padding:16px 20px; background:var(--secondary);
+          border:1px solid var(--light); border-radius:6px;
+          font-size:0.82rem; color:var(--shadow);
         }
 
         /* ── Research notes ── */
@@ -684,6 +706,40 @@ export default function ArtworkFactSheet() {
                         </Link>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* ── Archive photographs ── */}
+                {hasArchivePhotos && (
+                  <div className="aw-archphoto">
+                    <div className="aw-archive-label">Archive photographs</div>
+                    {isResearcher ? (
+                      <div className="aw-archphoto-grid">
+                        {archivePhotos.map((p, i) => (
+                          <div key={i} className="aw-archphoto-card"
+                            onClick={() => p.imageUrl && window.open(p.imageUrl, "_blank")}>
+                            {p.thumbnailUrl
+                              ? <img src={p.thumbnailUrl} className="aw-archphoto-img" alt={p.caption || p.title} />
+                              : <div className="aw-archphoto-img" style={{display:"flex",alignItems:"center",
+                                  justifyContent:"center",color:"var(--shadow)",opacity:0.3,fontSize:"1.5rem"}}>◎</div>
+                            }
+                            <div className="aw-archphoto-label">
+                              {p.caption || p.title}
+                              {p.dateText && <div style={{opacity:0.6}}>{p.dateText}</div>}
+                              {p.archiveRef && <div style={{fontFamily:"monospace",fontSize:"0.65rem",opacity:0.5}}>{p.archiveRef}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="aw-archphoto-locked">
+                        <strong style={{color:"var(--primary)"}}>
+                          {archivePhotos.length} archive photograph{archivePhotos.length > 1 ? "s" : ""}
+                        </strong>
+                        {" "}of this work {archivePhotos.length > 1 ? "are" : "is"} available to{" "}
+                        <a href="/access" style={{color:"var(--primary)"}}>research account holders</a>.
+                      </div>
+                    )}
                   </div>
                 )}
 

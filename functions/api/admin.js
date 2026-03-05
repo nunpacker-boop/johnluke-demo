@@ -271,6 +271,85 @@ export async function onRequestPost({ request, env }) {
         return new Response(JSON.stringify({ ok: true }), { headers: CORS });
       }
 
+      // ── DOCUMENT IMAGES ──────────────────────────────────────────────────
+      case "document_image_add": {
+        const imgId = `dimg-${Date.now()}`;
+        await run(`
+          MATCH (d:Document {documentId: $docId})
+          CREATE (i:DocumentImage {
+            imageId:      $imgId,
+            page:         $page,
+            imageUrl:     $imageUrl,
+            thumbnailUrl: $thumbnailUrl,
+            imageSlug:    $imageSlug,
+            caption:      $caption,
+            accessTier:   $accessTier
+          })
+          CREATE (i)-[:IMAGE_OF]->(d)
+        `, {
+          docId:        params.documentId,
+          imgId,
+          page:         params.page         || 1,
+          imageUrl:     params.imageUrl      || "",
+          thumbnailUrl: params.thumbnailUrl  || "",
+          imageSlug:    params.imageSlug     || "",
+          caption:      params.caption       || "",
+          accessTier:   params.accessTier    || "researcher",
+        });
+        return new Response(JSON.stringify({ ok: true, imageId: imgId }), { headers: CORS });
+      }
+
+      case "document_image_delete": {
+        await run(`MATCH (i:DocumentImage {imageId: $id}) DETACH DELETE i`, { id: params.id });
+        return new Response(JSON.stringify({ ok: true }), { headers: CORS });
+      }
+
+      case "document_image_list": {
+        const rows = await run(`
+          MATCH (i:DocumentImage)-[:IMAGE_OF]->(d:Document {documentId: $docId})
+          RETURN i.imageId AS imageId, i.page AS page,
+                 i.imageUrl AS imageUrl, i.thumbnailUrl AS thumbnailUrl,
+                 i.imageSlug AS imageSlug, i.caption AS caption,
+                 i.accessTier AS accessTier
+          ORDER BY i.page ASC
+        `, { docId: params.documentId });
+        return new Response(JSON.stringify({ images: rows }), { headers: CORS });
+      }
+
+      // ── DOCUMENT → ARTWORK DEPICTS LINK ──────────────────────────────────
+      // Used for photographs that show a finished artwork
+      case "document_depicts_set": {
+        await run(`
+          MATCH (d:Document {documentId: $docId})
+          OPTIONAL MATCH (d)-[r:DEPICTS_ARTWORK]->() DELETE r
+          WITH d
+          OPTIONAL MATCH (w:Artwork {artworkId: $artworkId})
+          FOREACH (_ IN CASE WHEN w IS NOT NULL THEN [1] ELSE [] END |
+            CREATE (d)-[:DEPICTS_ARTWORK]->(w)
+          )
+        `, { docId: params.documentId, artworkId: params.artworkId || null });
+        return new Response(JSON.stringify({ ok: true }), { headers: CORS });
+      }
+
+      case "document_depicts_get": {
+        const rows = await run(`
+          MATCH (d:Document {documentId: $id})
+          OPTIONAL MATCH (d)-[:DEPICTS_ARTWORK]->(w:Artwork)
+          RETURN w.artworkId AS artworkId, w.title AS title,
+                 w.dateText AS dateText, w.thumbnailUrl AS thumbnailUrl
+        `, { id: params.id });
+        const artwork = rows[0]?.artworkId ? rows[0] : null;
+        return new Response(JSON.stringify({ artwork }), { headers: CORS });
+      }
+
+      case "document_depicts_remove": {
+        await run(`
+          MATCH (d:Document {documentId: $docId})-[r:DEPICTS_ARTWORK]->()
+          DELETE r
+        `, { docId: params.documentId });
+        return new Response(JSON.stringify({ ok: true }), { headers: CORS });
+      }
+
       // ── COMMISSIONS ───────────────────────────────────────────────────────
       case "commissions_list": {
         const rows = await run(`

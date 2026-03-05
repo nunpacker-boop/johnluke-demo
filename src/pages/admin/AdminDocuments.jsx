@@ -20,6 +20,13 @@ export default function AdminDocuments() {
   const [isNew, setIsNew]       = useState(false);
   const [saving, setSaving]     = useState(false);
   const [msg, setMsg]           = useState(null);
+  const [images, setImages]       = useState([]);
+  const [depictsArtwork, setDepictsArtwork] = useState(null);
+  const [artworkSearch, setArtworkSearch]   = useState("");
+  const [artworkResults, setArtworkResults] = useState([]);
+  const [imgForm, setImgForm]   = useState({ page: "", imageUrl: "", thumbnailUrl: "",
+    imageSlug: "", caption: "", accessTier: "researcher" });
+  const [addingImg, setAddingImg] = useState(false);
 
   const loadDocs = async () => {
     setLoading(true);
@@ -262,6 +269,160 @@ export default function AdminDocuments() {
                   >
                     ⌗ Add more excerpts in tagger
                   </Link>
+                </div>
+              </div>
+            )}
+
+            {/* ── Document images (pages) ── */}
+            {!isNew && (
+              <div className="adm-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span className="adm-label">Document images ({images.length} page{images.length !== 1 ? "s" : ""})</span>
+                  <button className="adm-btn adm-btn-secondary" style={{ fontSize: "0.72rem", padding: "4px 12px" }}
+                    onClick={() => setAddingImg(v => !v)}>
+                    {addingImg ? "Cancel" : "+ Add image"}
+                  </button>
+                </div>
+
+                {/* Image grid */}
+                {images.length > 0 && (
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+                    {images.map((img, i) => (
+                      <div key={i} style={{ position: "relative", width: 90, border: "1px solid #1a2030",
+                        borderRadius: 4, overflow: "hidden", background: "#0d1520" }}>
+                        {img.thumbnailUrl
+                          ? <img src={img.thumbnailUrl} style={{ width: "100%", height: 70, objectFit: "cover", display: "block" }} alt="" />
+                          : <div style={{ width: "100%", height: 70, display: "flex", alignItems: "center",
+                              justifyContent: "center", color: "#3a5068", fontSize: "1.2rem" }}>◎</div>
+                        }
+                        <div style={{ padding: "4px 6px", fontSize: "0.62rem", color: "#6a8aaa" }}>
+                          p.{img.page}{img.caption ? ` — ${img.caption.slice(0,20)}` : ""}
+                        </div>
+                        <button onClick={async () => {
+                          await adminApi("document_image_delete", { id: img.imageId });
+                          loadImages(selected.documentId);
+                        }} style={{ position: "absolute", top: 3, right: 3, background: "rgba(0,0,0,0.6)",
+                          border: "none", color: "#ff6060", cursor: "pointer", borderRadius: 3,
+                          width: 18, height: 18, display: "flex", alignItems: "center",
+                          justifyContent: "center", fontSize: "0.7rem", padding: 0 }}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add image form */}
+                {addingImg && (
+                  <div style={{ borderTop: "1px solid #1a2030", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div>
+                        <label className="adm-label">Page number</label>
+                        <input className="adm-input" type="number" min="1" value={imgForm.page}
+                          onChange={e => setImgForm(f => ({ ...f, page: e.target.value }))} placeholder="1" />
+                      </div>
+                      <div>
+                        <label className="adm-label">Access tier</label>
+                        <select className="adm-input" value={imgForm.accessTier}
+                          onChange={e => setImgForm(f => ({ ...f, accessTier: e.target.value }))}>
+                          <option value="researcher">Researcher</option>
+                          <option value="public">Public</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="adm-label">Display image URL (S3)</label>
+                      <input className="adm-input" value={imgForm.imageUrl}
+                        onChange={e => setImgForm(f => ({ ...f, imageUrl: e.target.value }))}
+                        placeholder="https://johnluke-assets.s3.eu-west-1.amazonaws.com/archive/display/letters/..." />
+                    </div>
+                    <div>
+                      <label className="adm-label">Thumbnail URL (S3)</label>
+                      <input className="adm-input" value={imgForm.thumbnailUrl}
+                        onChange={e => setImgForm(f => ({ ...f, thumbnailUrl: e.target.value }))}
+                        placeholder="https://johnluke-assets.s3.eu-west-1.amazonaws.com/archive/thumbs/letters/..." />
+                    </div>
+                    <div>
+                      <label className="adm-label">Caption (optional)</label>
+                      <input className="adm-input" value={imgForm.caption}
+                        onChange={e => setImgForm(f => ({ ...f, caption: e.target.value }))}
+                        placeholder="e.g. Page 1 of 3" />
+                    </div>
+                    <button className="adm-btn adm-btn-primary" style={{ alignSelf: "flex-end" }}
+                      onClick={async () => {
+                        await adminApi("document_image_add", {
+                          documentId:   selected.documentId,
+                          page:         parseInt(imgForm.page) || 1,
+                          imageUrl:     imgForm.imageUrl,
+                          thumbnailUrl: imgForm.thumbnailUrl,
+                          imageSlug:    imgForm.imageSlug,
+                          caption:      imgForm.caption,
+                          accessTier:   imgForm.accessTier,
+                        });
+                        setImgForm({ page: "", imageUrl: "", thumbnailUrl: "", imageSlug: "", caption: "", accessTier: "researcher" });
+                        setAddingImg(false);
+                        loadImages(selected.documentId);
+                      }}>
+                      Add image
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Depicts artwork (photographs only) ── */}
+            {!isNew && editing?.type === "photograph" && (
+              <div className="adm-card">
+                <span className="adm-label">Depicts artwork</span>
+                <div style={{ fontSize: "0.72rem", color: "#6a8aaa", marginBottom: 10 }}>
+                  Link this photograph to the artwork it shows.
+                </div>
+
+                {depictsArtwork && (
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px",
+                    background: "#0d1520", borderRadius: 4, border: "1px solid #1a2030", marginBottom: 10 }}>
+                    {depictsArtwork.thumbnailUrl &&
+                      <img src={depictsArtwork.thumbnailUrl} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 3 }} alt="" />
+                    }
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "0.8rem", color: "#c8d8e8" }}>{depictsArtwork.title}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#4a7fa5" }}>{depictsArtwork.artworkId}</div>
+                    </div>
+                    <button onClick={async () => {
+                      await adminApi("document_depicts_remove", { documentId: selected.documentId });
+                      setDepictsArtwork(null);
+                    }} style={{ background: "none", border: "none", color: "#ff6060", cursor: "pointer", fontSize: "0.75rem" }}>
+                      Remove
+                    </button>
+                  </div>
+                )}
+
+                <div style={{ position: "relative" }}>
+                  <input className="adm-input" placeholder="Search artwork by title or ID…"
+                    value={artworkSearch}
+                    onChange={e => { setArtworkSearch(e.target.value); searchArtworks(e.target.value); }} />
+                  {artworkResults.length > 0 && (
+                    <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
+                      background: "#0a0e14", border: "1px solid #1a2030", borderRadius: 4, maxHeight: 200, overflowY: "auto" }}>
+                      {artworkResults.map((aw, i) => (
+                        <div key={i} onClick={async () => {
+                          await adminApi("document_depicts_set", {
+                            documentId: selected.documentId,
+                            artworkId: aw.artworkId,
+                          });
+                          setDepictsArtwork(aw);
+                          setArtworkSearch(""); setArtworkResults([]);
+                        }} style={{ display: "flex", gap: 10, alignItems: "center",
+                          padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #1a2030" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#0d1520"}
+                          onMouseLeave={e => e.currentTarget.style.background = ""}>
+                          {aw.thumbnailUrl && <img src={aw.thumbnailUrl} style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 2 }} alt="" />}
+                          <div>
+                            <div style={{ fontSize: "0.78rem", color: "#c8d8e8" }}>{aw.title}</div>
+                            <div style={{ fontSize: "0.65rem", color: "#4a7fa5" }}>{aw.artworkId} · {aw.dateText}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
