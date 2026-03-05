@@ -85,7 +85,7 @@ export default function AdminArtworks() {
         </h1>
         <input
           className="adm-input adm-search-input"
-          placeholder="Search by title…"
+          placeholder="Search by title or ID (e.g. jl-016)…"
           value={search}
           onChange={e => { setSearch(e.target.value); searchTimeout(e.target.value); }}
           style={{ marginBottom: 12 }}

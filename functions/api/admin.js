@@ -87,7 +87,7 @@ export async function onRequestPost({ request, env }) {
         const { search = "", offset = 0, limit = 50 } = params;
         const rows = await run(`
           MATCH (w:Artwork)
-          WHERE toLower(w.title) CONTAINS toLower($search) OR $search = ""
+          WHERE ($search = "" OR toLower(w.title) CONTAINS toLower($search) OR toLower(w.artworkId) CONTAINS toLower($search))
           RETURN w.artworkId AS artworkId, w.title AS title, w.yearFrom AS yearFrom,
                  w.medium AS medium, w.theme AS theme, w.support AS support,
                  w.selectedCatalogue AS selectedCatalogue, w.isStudy AS isStudy,
@@ -97,7 +97,7 @@ export async function onRequestPost({ request, env }) {
         `, { search, offset: parseInt(offset), limit: parseInt(limit) });
         const total = await run(`
           MATCH (w:Artwork)
-          WHERE toLower(w.title) CONTAINS toLower($search) OR $search = ""
+          WHERE ($search = "" OR toLower(w.title) CONTAINS toLower($search) OR toLower(w.artworkId) CONTAINS toLower($search))
           RETURN count(w) AS total
         `, { search });
         return new Response(JSON.stringify({ artworks: rows, total: total[0]?.total || 0 }), { headers: CORS });
@@ -146,7 +146,7 @@ export async function onRequestPost({ request, env }) {
       case "artworks_search": {
         const rows = await run(`
           MATCH (w:Artwork)
-          WHERE toLower(w.title) CONTAINS toLower($q)
+          WHERE toLower(w.title) CONTAINS toLower($q) OR toLower(w.artworkId) CONTAINS toLower($q)
           RETURN w.artworkId AS artworkId, w.title AS title,
                  w.yearFrom AS yearFrom, w.thumbnailUrl AS thumbnailUrl
           ORDER BY w.yearFrom ASC LIMIT 12
