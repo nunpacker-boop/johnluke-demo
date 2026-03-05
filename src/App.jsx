@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import AdminShell from "./pages/admin/AdminShell.jsx";
 import Layout from "./components/Layout.jsx";
 
 // Top-level
@@ -69,6 +70,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Full-bleed routes — outside Layout */}
+        <Route path="/admin/*" element={<AdminShell />} />
         <Route path="/works/selected-catalogue" element={<SelectedCatalogueTimeline />} />
         <Route path="/life-and-times" element={<LifeAndTimesTimeline />} />
 
