@@ -43,7 +43,10 @@ export default function AdminArtworks() {
       const d = await adminApi("artwork_get", { id: artworkId });
       setSelected(d.artwork);
       setEditing({ ...d.artwork });
+      setArtImages([]);
+      setImgMsg(null);
       navigate(`/admin/artworks/${artworkId}`, { replace: true });
+      loadArtImages(artworkId);
     } catch (e) { setMsg({ type: "error", text: e.message }); }
   };
 
@@ -69,6 +72,39 @@ export default function AdminArtworks() {
   };
 
   const set = (k, v) => setEditing(prev => ({ ...prev, [k]: v }));
+
+  // ── Artwork images ────────────────────────────────────────────────────────
+  const [artImages, setArtImages]     = useState([]);
+  const [newImg, setNewImg]           = useState({ imageUrl: "", thumbnailUrl: "", caption: "", sortOrder: 2 });
+  const [imgAdding, setImgAdding]     = useState(false);
+  const [imgMsg, setImgMsg]           = useState(null);
+
+  const loadArtImages = async (artworkId) => {
+    try {
+      const d = await adminApi("artwork_image_list", { id: artworkId });
+      setArtImages(d.images || []);
+    } catch (e) { setArtImages([]); }
+  };
+
+  const addArtImage = async () => {
+    if (!newImg.imageUrl.trim()) return;
+    setImgAdding(true); setImgMsg(null);
+    try {
+      await adminApi("artwork_image_add", { id: selected.artworkId, ...newImg });
+      setNewImg({ imageUrl: "", thumbnailUrl: "", caption: "", sortOrder: 2 });
+      await loadArtImages(selected.artworkId);
+      setImgMsg({ type: "success", text: "Image added" });
+    } catch (e) { setImgMsg({ type: "error", text: e.message }); }
+    setImgAdding(false);
+  };
+
+  const deleteArtImage = async (imageId) => {
+    if (!confirm("Remove this image?")) return;
+    try {
+      await adminApi("artwork_image_delete", { id: selected.artworkId, imageId });
+      await loadArtImages(selected.artworkId);
+    } catch (e) { setImgMsg({ type: "error", text: e.message }); }
+  };
 
   const searchTimeout = useCallback((() => {
     let t;
@@ -270,6 +306,82 @@ export default function AdminArtworks() {
                 <label className="adm-label">Curator notes (internal)</label>
                 <textarea className="adm-textarea"
                   value={editing.notes || ""} onChange={e => set("notes", e.target.value)} />
+              </div>
+            </div>
+
+            {/* Supplementary images */}
+            <div className="adm-card">
+              <span className="adm-label">Supplementary images</span>
+              <div style={{ fontSize: "0.72rem", color: "#5a7a98", marginBottom: 12 }}>
+                These appear as a clickable thumbnail strip below the primary image on the fact sheet.
+                The primary image is set via <code style={{ color: "#7aaac8" }}>imageUrl</code> on the artwork node.
+              </div>
+
+              {imgMsg && <div className={`adm-msg-${imgMsg.type}`} style={{ marginBottom: 8 }}>{imgMsg.text}</div>}
+
+              {artImages.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                  {artImages.map(img => (
+                    <div key={img.imageId} style={{ position: "relative", width: 80 }}>
+                      {img.thumbnailUrl || img.imageUrl
+                        ? <img src={img.thumbnailUrl || img.imageUrl} alt={img.caption || ""}
+                            style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 4, background: "#1a2030", display: "block" }} />
+                        : <div style={{ width: 80, height: 80, background: "#1a2030", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "#3a5068" }}>⬚</div>
+                      }
+                      {img.caption && (
+                        <div style={{ fontSize: "0.6rem", color: "#5a7a98", marginTop: 3, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {img.caption}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => deleteArtImage(img.imageId)}
+                        style={{ position: "absolute", top: 2, right: 2, background: "rgba(0,0,0,0.7)", border: "none", color: "#e05050", borderRadius: 3, cursor: "pointer", fontSize: "0.65rem", padding: "1px 4px", lineHeight: 1.4 }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {artImages.length === 0 && (
+                <div style={{ fontSize: "0.72rem", color: "#3a5068", marginBottom: 12 }}>No supplementary images yet.</div>
+              )}
+
+              <div style={{ borderTop: "1px solid #1a2535", paddingTop: 12 }}>
+                <div style={{ fontSize: "0.7rem", color: "#7a9ab8", marginBottom: 8, fontWeight: 600 }}>Add image</div>
+                <div className="adm-row" style={{ marginBottom: 8 }}>
+                  <div className="adm-col-2">
+                    <label className="adm-label">Display URL <span style={{ color: "#e05050" }}>*</span></label>
+                    <input className="adm-input" placeholder="https://…/artworks/display/…-display.jpg"
+                      value={newImg.imageUrl}
+                      onChange={e => setNewImg(p => ({ ...p, imageUrl: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="adm-row" style={{ marginBottom: 8 }}>
+                  <div className="adm-col-2">
+                    <label className="adm-label">Thumbnail URL</label>
+                    <input className="adm-input" placeholder="https://…/artworks/thumbs/…-thumb.jpg"
+                      value={newImg.thumbnailUrl}
+                      onChange={e => setNewImg(p => ({ ...p, thumbnailUrl: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="adm-row">
+                  <div className="adm-col">
+                    <label className="adm-label">Caption</label>
+                    <input className="adm-input" placeholder="e.g. verso, framed, detail"
+                      value={newImg.caption}
+                      onChange={e => setNewImg(p => ({ ...p, caption: e.target.value }))} />
+                  </div>
+                  <div className="adm-col">
+                    <label className="adm-label">Sort order</label>
+                    <input className="adm-input" type="number" min={1} value={newImg.sortOrder}
+                      onChange={e => setNewImg(p => ({ ...p, sortOrder: parseInt(e.target.value) || 2 }))} />
+                  </div>
+                  <div className="adm-col" style={{ display: "flex", alignItems: "flex-end" }}>
+                    <button className="adm-btn adm-btn-primary" onClick={addArtImage} disabled={imgAdding || !newImg.imageUrl.trim()}>
+                      {imgAdding ? "Adding…" : "Add image"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

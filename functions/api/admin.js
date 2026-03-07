@@ -271,6 +271,48 @@ export async function onRequestPost({ request, env }) {
         return new Response(JSON.stringify({ ok: true }), { headers: CORS });
       }
 
+      // ── ARTWORK IMAGES ───────────────────────────────────────────────────
+      case "artwork_image_list": {
+        const rows = await run(`
+          MATCH (i:ArtworkImage)-[:IMAGE_OF]->(w:Artwork {artworkId: $id})
+          RETURN i.imageId AS imageId, i.imageUrl AS imageUrl,
+                 i.thumbnailUrl AS thumbnailUrl, i.caption AS caption,
+                 i.sortOrder AS sortOrder
+          ORDER BY i.sortOrder ASC, i.imageId ASC
+        `, { id: params.id });
+        return new Response(JSON.stringify({ images: rows }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      case "artwork_image_add": {
+        const imgId = `aimg-${params.id}-${Date.now()}`;
+        await run(`
+          MATCH (w:Artwork {artworkId: $artworkId})
+          CREATE (i:ArtworkImage {
+            imageId:      $imageId,
+            imageUrl:     $imageUrl,
+            thumbnailUrl: $thumbnailUrl,
+            caption:      $caption,
+            sortOrder:    $sortOrder
+          })-[:IMAGE_OF]->(w)
+        `, {
+          artworkId:    params.id,
+          imageId:      imgId,
+          imageUrl:     params.imageUrl     || "",
+          thumbnailUrl: params.thumbnailUrl || "",
+          caption:      params.caption      || "",
+          sortOrder:    params.sortOrder    || 2,
+        });
+        return new Response(JSON.stringify({ ok: true, imageId: imgId }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      case "artwork_image_delete": {
+        await run(`
+          MATCH (i:ArtworkImage {imageId: $imageId})-[:IMAGE_OF]->(w:Artwork {artworkId: $artworkId})
+          DETACH DELETE i
+        `, { imageId: params.imageId, artworkId: params.id });
+        return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+      }
+
       // ── DOCUMENT IMAGES ──────────────────────────────────────────────────
       case "document_image_add": {
         const imgId = `dimg-${Date.now()}`;
