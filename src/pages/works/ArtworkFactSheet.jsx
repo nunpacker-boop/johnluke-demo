@@ -141,6 +141,13 @@ export default function ArtworkFactSheet() {
 
   const w = artwork;
   const image = w?.imageUrl || w?.thumbnailUrl;
+  const additionalImages = w?.additionalImages || [];
+  const allImages = [
+    ...(image ? [{ imageUrl: image, thumbnailUrl: w?.thumbnailUrl || image, caption: null }] : []),
+    ...additionalImages,
+  ];
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const displayImage = allImages[selectedImageIdx]?.imageUrl || image;
 
   // Archive excerpts — split by access tier
   // TODO: wire isResearcher to actual auth when researcher accounts are built
@@ -203,6 +210,15 @@ export default function ArtworkFactSheet() {
         .aw-img-wrap img { width:100%; height:auto; display:block;
           pointer-events:none; user-select:none; -webkit-user-drag:none; }
         .aw-img-shield { position:absolute; inset:0; z-index:2; }
+        .aw-img-gallery { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+        .aw-img-gallery-thumb {
+          width:60px; height:60px; object-fit:cover; border-radius:3px;
+          cursor:pointer; opacity:0.7; border:2px solid transparent;
+          transition:opacity 0.15s, border-color 0.15s;
+        }
+        .aw-img-gallery-thumb:hover { opacity:1; }
+        .aw-img-gallery-thumb.active { opacity:1; border-color:var(--primary); }
+
         .aw-img-placeholder { display:flex; flex-direction:column; align-items:center;
           justify-content:center; gap:8px; color:#b0a898; padding:60px 40px; text-align:center; }
         .aw-img-placeholder span { font-size:2.5rem; font-family:monospace; }
@@ -519,9 +535,9 @@ export default function ArtworkFactSheet() {
                   {/* Image */}
                   <div className="aw-image-col">
                     <div className="aw-image-frame">
-                      {image && !imgErr ? (
+                      {displayImage && !imgErr ? (
                         <div className="aw-img-wrap">
-                          <img src={image} alt={w.title}
+                          <img src={displayImage} alt={w.title}
                             onError={() => setImgErr(true)}
                             onContextMenu={e => e.preventDefault()}
                             onDragStart={e => e.preventDefault()} />
@@ -534,6 +550,21 @@ export default function ArtworkFactSheet() {
                         </div>
                       )}
                     </div>
+                    {allImages.length > 1 && (
+                      <div className="aw-img-gallery">
+                        {allImages.map((img, i) => (
+                          <img key={i}
+                            src={img.thumbnailUrl || img.imageUrl}
+                            alt={img.caption || `View ${i + 1}`}
+                            title={img.caption || `View ${i + 1}`}
+                            className={`aw-img-gallery-thumb${selectedImageIdx === i ? " active" : ""}`}
+                            onClick={() => { setSelectedImageIdx(i); setImgErr(false); }}
+                            onContextMenu={e => e.preventDefault()}
+                            onDragStart={e => e.preventDefault()}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Details */}

@@ -52,6 +52,9 @@ export async function onRequestGet({ request, env }) {
     // Ownership periods
     OPTIONAL MATCH (w)-[op:OWNED_BY]->(o:Owner)
 
+    // Additional images for this artwork
+    OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+
     // Archive photographs depicting this artwork (researcher tier)
     OPTIONAL MATCH (photo:Document)-[:DEPICTS_ARTWORK]->(w)
     OPTIONAL MATCH (pimg:DocumentImage)-[:IMAGE_OF]->(photo)
@@ -71,6 +74,13 @@ export async function onRequestGet({ request, env }) {
 
     WITH w,
       collect(DISTINCT t.name)  AS techniques,
+      collect(DISTINCT CASE WHEN ai IS NOT NULL THEN {
+        imageId:      ai.imageId,
+        imageUrl:     ai.imageUrl,
+        thumbnailUrl: ai.thumbnailUrl,
+        caption:      ai.caption,
+        sortOrder:    ai.sortOrder
+      } ELSE null END) AS artworkImagesRaw,
       collect(DISTINCT CASE WHEN photo IS NOT NULL THEN {
         documentId:   photo.documentId,
         title:        photo.title,
@@ -169,6 +179,7 @@ export async function onRequestGet({ request, env }) {
       [v IN versionsRaw  WHERE v IS NOT NULL]    AS versions,
       primaryWork,
       [e IN excerptsRaw WHERE e IS NOT NULL] AS excerpts,
+      [i IN artworkImagesRaw WHERE i IS NOT NULL] AS additionalImages,
       [p IN archivePhotosRaw WHERE p IS NOT NULL] AS archivePhotos,
       coalesce(w.timelineVisible, true)          AS timelineVisible,
       coalesce(w.isStudy, false)                 AS isStudy,
