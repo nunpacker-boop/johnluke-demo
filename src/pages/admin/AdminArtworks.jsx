@@ -59,7 +59,8 @@ export default function AdminArtworks() {
       const EDITABLE = ["title","dateText","yearFrom","yearTo","dateUncertain",
         "medium","support","mediumNotes","theme","description","notes",
         "dimensionsText","heightCm","widthCm","currentLocation",
-        "selectedCatalogue","isStudy","timelineVisible","signature","condition"];
+        "selectedCatalogue","isStudy","timelineVisible","signature","condition",
+        "imageUrl","thumbnailUrl","imageSlug"];
       EDITABLE.forEach(k => { if (editing[k] !== undefined) fields[k] = editing[k]; });
       await adminApi("artwork_update", { id: selected.artworkId, fields });
       setMsg({ type: "success", text: "Saved" });
@@ -190,13 +191,41 @@ export default function AdminArtworks() {
 
             {msg && <div className={`adm-msg-${msg.type}`}>{msg.text}</div>}
 
-            {/* Image */}
-            {editing.imageUrl && (
-              <div style={{ marginBottom: 20 }}>
-                <img src={editing.thumbnailUrl || editing.imageUrl} alt=""
-                  style={{ height: 120, objectFit: "contain", borderRadius: 4, background: "#1a2030" }} />
+            {/* Primary image */}
+            <div className="adm-card">
+              <span className="adm-label">Primary image</span>
+              {editing.imageUrl && (
+                <div style={{ marginBottom: 12 }}>
+                  <img src={editing.thumbnailUrl || editing.imageUrl} alt=""
+                    style={{ height: 100, objectFit: "contain", borderRadius: 4, background: "#1a2030" }} />
+                </div>
+              )}
+              <div className="adm-row" style={{ marginBottom: 8 }}>
+                <div className="adm-col-2">
+                  <label className="adm-label">Display URL</label>
+                  <input className="adm-input" placeholder="https://…/artworks/display/…-display.jpg"
+                    value={editing.imageUrl || ""}
+                    onChange={e => set("imageUrl", e.target.value)} />
+                </div>
               </div>
-            )}
+              <div className="adm-row">
+                <div className="adm-col-2">
+                  <label className="adm-label">Thumbnail URL</label>
+                  <input className="adm-input" placeholder="https://…/artworks/thumbs/…-thumb.jpg"
+                    value={editing.thumbnailUrl || ""}
+                    onChange={e => set("thumbnailUrl", e.target.value)} />
+                </div>
+                <div className="adm-col">
+                  <label className="adm-label">Image slug</label>
+                  <input className="adm-input" placeholder="art-jl001-…"
+                    value={editing.imageSlug || ""}
+                    onChange={e => set("imageSlug", e.target.value)} />
+                </div>
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "#3a5068", marginTop: 8 }}>
+                URLs are printed by <code style={{ color: "#5a8aaa" }}>jl-process-artwork.sh</code> at Step 5. Paste and Save.
+              </div>
+            </div>
 
             {/* Core fields */}
             <div className="adm-card">
