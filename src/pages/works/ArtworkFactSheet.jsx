@@ -204,8 +204,8 @@ export default function ArtworkFactSheet() {
         @media (max-width:800px) { .aw-layout { grid-template-columns:1fr; } }
 
         /* ── Image ── */
-        .aw-image-frame { background:#f0ede8; border-radius:0.35rem; overflow:hidden;
-          position:sticky; top:24px; }
+        .aw-image-frame { background:#f0ede8; border-radius:0.35rem; overflow:hidden; }
+        .aw-image-col { position:sticky; top:24px; }
         .aw-img-wrap { position:relative; }
         .aw-img-wrap img { width:100%; height:auto; display:block;
           pointer-events:none; user-select:none; -webkit-user-drag:none; }
