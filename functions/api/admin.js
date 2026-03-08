@@ -88,10 +88,14 @@ export async function onRequestPost({ request, env }) {
         const rows = await run(`
           MATCH (w:Artwork)
           WHERE ($search = "" OR toLower(w.title) CONTAINS toLower($search) OR toLower(w.artworkId) CONTAINS toLower($search))
+          OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+          WITH w, ai ORDER BY ai.sortOrder ASC
+          WITH w, head(collect(ai)) AS firstImg
           RETURN w.artworkId AS artworkId, w.title AS title, w.yearFrom AS yearFrom,
                  w.medium AS medium, w.theme AS theme, w.support AS support,
                  w.selectedCatalogue AS selectedCatalogue, w.isStudy AS isStudy,
-                 w.timelineVisible AS timelineVisible, w.thumbnailUrl AS thumbnailUrl
+                 w.timelineVisible AS timelineVisible,
+                 coalesce(w.thumbnailUrl, firstImg.thumbnailUrl, firstImg.imageUrl) AS thumbnailUrl
           ORDER BY w.yearFrom ASC, w.artworkId ASC
           SKIP $offset LIMIT $limit
         `, { search, offset: parseInt(offset), limit: parseInt(limit) });
@@ -147,8 +151,12 @@ export async function onRequestPost({ request, env }) {
         const rows = await run(`
           MATCH (w:Artwork)
           WHERE toLower(w.title) CONTAINS toLower($q) OR toLower(w.artworkId) CONTAINS toLower($q)
+          OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+          WITH w, ai ORDER BY ai.sortOrder ASC
+          WITH w, head(collect(ai)) AS firstImg
           RETURN w.artworkId AS artworkId, w.title AS title,
-                 w.yearFrom AS yearFrom, w.thumbnailUrl AS thumbnailUrl
+                 w.yearFrom AS yearFrom,
+                 coalesce(w.thumbnailUrl, firstImg.thumbnailUrl, firstImg.imageUrl) AS thumbnailUrl
           ORDER BY w.yearFrom ASC LIMIT 12
         `, { q: params.q || "" });
         return new Response(JSON.stringify({ artworks: rows }), { headers: CORS });
@@ -377,8 +385,12 @@ export async function onRequestPost({ request, env }) {
         const rows = await run(`
           MATCH (d:Document {documentId: $id})
           OPTIONAL MATCH (d)-[:DEPICTS_ARTWORK]->(w:Artwork)
+          OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+          WITH d, w, ai ORDER BY ai.sortOrder ASC
+          WITH d, w, head(collect(ai)) AS firstImg
           RETURN w.artworkId AS artworkId, w.title AS title,
-                 w.dateText AS dateText, w.thumbnailUrl AS thumbnailUrl
+                 w.dateText AS dateText,
+                 coalesce(w.thumbnailUrl, firstImg.thumbnailUrl, firstImg.imageUrl) AS thumbnailUrl
         `, { id: params.id });
         const artwork = rows[0]?.artworkId ? rows[0] : null;
         return new Response(JSON.stringify({ artwork }), { headers: CORS });

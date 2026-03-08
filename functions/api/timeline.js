@@ -135,6 +135,11 @@ export async function onRequestGet({ request, env }) {
         MATCH (p:Period)
         OPTIONAL MATCH (w:Artwork)-[:CREATED_IN]->(p)
         WHERE w.yearFrom IS NOT NULL
+        OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+        WITH p, w,
+          min(ai.sortOrder) AS minSort
+        OPTIONAL MATCH (ai2:ArtworkImage)-[:IMAGE_OF]->(w)
+        WHERE ai2.sortOrder = minSort
         WITH p,
           collect(DISTINCT CASE WHEN w IS NOT NULL THEN {
             artworkId:    w.artworkId,
@@ -143,8 +148,8 @@ export async function onRequestGet({ request, env }) {
             yearFrom:     w.yearFrom,
             yearTo:       w.yearTo,
             medium:       w.medium,
-            thumbnailUrl: w.thumbnailUrl,
-            imageUrl:     w.imageUrl,
+            thumbnailUrl: coalesce(w.thumbnailUrl, ai2.thumbnailUrl, ai2.imageUrl),
+            imageUrl:     coalesce(w.imageUrl,     ai2.imageUrl),
             selected:     coalesce(w.selectedCatalogue, false),
             isStudy:          coalesce(w.isStudy, false),
             theme:            w.theme,
@@ -165,6 +170,9 @@ export async function onRequestGet({ request, env }) {
       runQuery(`
         MATCH (w:Artwork)
         WHERE w.yearFrom IS NOT NULL
+        OPTIONAL MATCH (ai:ArtworkImage)-[:IMAGE_OF]->(w)
+        WITH w, ai ORDER BY ai.sortOrder ASC
+        WITH w, head(collect(ai)) AS firstImg
         RETURN
           w.artworkId    AS artworkId,
           w.title        AS title,
@@ -172,8 +180,8 @@ export async function onRequestGet({ request, env }) {
           w.yearFrom     AS yearFrom,
           w.yearTo       AS yearTo,
           w.medium       AS medium,
-          w.thumbnailUrl AS thumbnailUrl,
-          w.imageUrl     AS imageUrl,
+          coalesce(w.thumbnailUrl, firstImg.thumbnailUrl, firstImg.imageUrl) AS thumbnailUrl,
+          coalesce(w.imageUrl,     firstImg.imageUrl)                        AS imageUrl,
           coalesce(w.selectedCatalogue, false) AS selected,
           coalesce(w.isStudy, false) AS isStudy,
           w.theme AS theme,
